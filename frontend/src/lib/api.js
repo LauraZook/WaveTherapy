@@ -47,7 +47,7 @@ export const PROTOCOLS_META = {
   meditation: {
     title: "Deep Meditation & Prayer",
     blurb: "Get deeper into your spiritual practice with Wave Therapy for relaxation, focus and clarity.",
-    image: "https://curawaves.com/cdn/shop/files/Rocks_2_453x640.jpg?v=1778559745",
+    image: "https://images.unsplash.com/photo-1762013728549-f50828e8a113?w=1200&q=80&auto=format&fit=crop",
     icon: "Brain",
     accent: "sage",
   },
