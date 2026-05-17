@@ -1,0 +1,167 @@
+{
+  "project_name": "CuraWaves Customer Onboarding & Protocol App",
+  "theme": "Light",
+  "archetype": "Archetype 1: Organic & Earthy",
+  "branding_rules": {
+    "primary_emotion": "Hopeful, empowering, warm-yet-clinical, integrative-medicine",
+    "forbidden_elements": ["Dark mode", "Purple gradients", "Neon colors", "Generic 'Inter' headings", "Teal (#1B93A4) in dashboard elements"]
+  },
+  "typography": {
+    "fonts": {
+      "headings": {
+        "family": "Cormorant Garamond",
+        "type": "serif",
+        "weights": ["300", "400", "500", "600"],
+        "usage": "Hero headlines, section titles, card titles. Brings an editorial, trustworthy holistic medicine vibe."
+      },
+      "body": {
+        "family": "Manrope",
+        "type": "sans-serif",
+        "weights": ["300", "400", "500", "600", "700"],
+        "usage": "Body text, questionnaire labels, buttons, metadata. Clean, geometric but approachable."
+      }
+    },
+    "scale_rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none font-light",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-tight",
+      "h3": "text-xl sm:text-2xl tracking-normal",
+      "body": "text-base leading-relaxed",
+      "overline": "text-xs tracking-[0.2em] uppercase font-semibold text-sand-600"
+    },
+    "google_fonts_url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap"
+  },
+  "colors": {
+    "background": {
+      "page": "#FDFBF7",
+      "surface": "#FFFFFF",
+      "surface_alt": "#F5F2EB"
+    },
+    "brand": {
+      "ocean_blue": "#2C5E7A",
+      "ocean_blue_light": "#E9F1F5",
+      "ocean_blue_hover": "#214A61",
+      "terracotta": "#D27A59",
+      "terracotta_light": "#FAF0EC",
+      "sage": "#85A094"
+    },
+    "text": {
+      "primary": "#2A3439",
+      "secondary": "#5C6A72",
+      "disabled": "#A0AAB0",
+      "inverse": "#FFFFFF"
+    },
+    "border": {
+      "subtle": "#EAE5D9",
+      "strong": "#D5CEBC"
+    },
+    "status": {
+      "success": "#85A094",
+      "warning": "#E8A365",
+      "disclaimer_bg": "#FDF1E5",
+      "disclaimer_text": "#7A5A3A"
+    }
+  },
+  "layout_strategies": {
+    "spacing": {
+      "generous": "Use p-8, p-12, p-16 for main sections. Breathe room is essential.",
+      "cards": "Minimum p-6 or p-8 inside bordered containers."
+    },
+    "disclaimer_bar": {
+      "position": "sticky top-0 z-50",
+      "style": "bg-[#FDF1E5] text-[#7A5A3A] py-2 px-4 text-xs text-center font-body border-b border-[#EAE5D9]"
+    },
+    "hero": {
+      "style": "Asymmetric split layout. Text on left, image on right with organic rounded corners (e.g., rounded-tl-[80px] rounded-br-[80px]).",
+      "background": "bg-[#FDFBF7] with very subtle noise or grain texture if possible."
+    },
+    "protocol_bento": {
+      "grid": "grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6",
+      "card_style": "bg-white border border-[#EAE5D9] rounded-2xl p-8 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 shadow-sm",
+      "spans": "Mix col-span-4, col-span-8, col-span-6 to create an interesting asymmetric bento grid for the 5 protocols."
+    },
+    "questionnaire_wizard": {
+      "container": "Max-w-2xl mx-auto mt-12 bg-white rounded-3xl p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#EAE5D9]",
+      "progress_bar": "h-1 bg-[#F5F2EB] w-full rounded-full overflow-hidden. Inner fill bg-[#2C5E7A] transition-all duration-500",
+      "inputs": "Use Shadcn components lightly styled. Generous padding, no harsh black borders. Focus rings should be ring-[#2C5E7A]/20."
+    },
+    "prescription_card": {
+      "container": "Max-w-3xl mx-auto bg-[#FDFBF7] border border-[#D5CEBC] p-8 md:p-10 shadow-lg relative print:shadow-none print:border-none",
+      "header": "Border-b-2 border-dashed border-[#D5CEBC] pb-6 mb-6",
+      "code_chip_sequence": "Flex items-center gap-2 text-sm md:text-base font-mono bg-white p-3 rounded-lg border border-[#EAE5D9]",
+      "code_chip_styles": {
+        "auto": "bg-gray-100 text-gray-600 px-3 py-1 rounded",
+        "code_number": "bg-[#E9F1F5] text-[#2C5E7A] font-bold px-4 py-1 rounded text-lg",
+        "run": "bg-[#85A094] text-white px-3 py-1 rounded"
+      }
+    },
+    "admin_dashboard": {
+      "layout": "Control Room Grid. Minimal padding, dense data display. bg-page.",
+      "table": "Shadcn Table, border-[#EAE5D9]. Header text uppercase, tracking-wider.",
+      "drawer": "Shadcn Sheet for plan preview. Slides in from right, bg-white."
+    }
+  },
+  "imagery": [
+    {
+      "category": "hero",
+      "description": "Sports/wellness lifestyle image for the main landing page hero.",
+      "url": "https://curawaves.com/cdn/shop/products/image1_600x450.jpg?v=1635968769",
+      "usage": "Right side of the hero section, overlapping the background slightly."
+    },
+    {
+      "category": "product",
+      "description": "Wave Therapy machine product shot.",
+      "url": "https://curawaves.com/cdn/shop/files/Product_image_WT_1020x693.jpg?v=1696906574",
+      "usage": "In the 'How it works' or Prescription card header area to build trust."
+    },
+    {
+      "category": "methodology",
+      "description": "FREEDOM method visual chart.",
+      "url": "https://curawaves.com/cdn/shop/products/ScreenShot2022-01-17at10.59.02PM_893x479.png?v=1642489164",
+      "usage": "Dedicated full-width section explaining the FREEDOM healing method."
+    },
+    {
+      "category": "protocol_detox",
+      "description": "Nature/stones image for Detoxification/Wellness protocols.",
+      "url": "https://curawaves.com/cdn/shop/files/Rocks_2_453x640.jpg?v=1778559745",
+      "usage": "Background or accent image for the Detoxification bento card."
+    },
+    {
+      "category": "protocol_recovery",
+      "description": "Athlete recovery surfing.",
+      "url": "https://curawaves.com/cdn/shop/articles/drewsurfs_8810b14c-e9a0-4def-9aa7-7ba5c7d04a07_480x290_crop_center.jpg",
+      "usage": "Background or accent image for the Repair/Recovery bento card."
+    },
+    {
+      "category": "protocol_wellness",
+      "description": "Waterfall.",
+      "url": "https://curawaves.com/cdn/shop/articles/waterfall-by-ruins_9c671a03-d6f2-411a-907a-4ce6180e0e57_480x321_crop_center.jpg",
+      "usage": "Background or accent image for the Health & Wellness card."
+    }
+  ],
+  "components": {
+    "libraries": [
+      "framer-motion (for page transitions, step reveals, and card lifts)",
+      "lucide-react (for UI icons: checks, arrows, close buttons)",
+      "shadcn/ui (for forms, select, slider, dialog, sheet, table)"
+    ],
+    "shadcn_overrides": {
+      "card": "Remove default borders if used inside bento, apply custom #EAE5D9 borders. Use rounded-2xl or 3xl.",
+      "input": "bg-[#FDFBF7] border-[#EAE5D9] focus-visible:ring-[#2C5E7A]/30 focus-visible:border-[#2C5E7A]",
+      "button_primary": "bg-[#2C5E7A] text-white hover:bg-[#214A61] rounded-full px-8 py-6 text-lg transition-transform active:scale-95"
+    }
+  },
+  "testing": {
+    "data_testid_rules": "All interactive and key informational elements MUST include a `data-testid` attribute. Convention: kebab-case, role-based. Examples: `data-testid='hero-cta-button'`, `data-testid='questionnaire-step-1-submit'`, `data-testid='disclaimer-banner'`, `data-testid='protocol-card-detox'`"
+  },
+  "instructions_to_main_agent": [
+    "Inject the Google Fonts URL into index.html.",
+    "Configure tailwind.config.js with the custom colors, fonts (Cormorant Garamond for serif, Manrope for sans), and extend spacing if necessary.",
+    "Implement the Disclaimer bar as a fixed/sticky element at the very top of the layout.",
+    "Build the Landing Page with the provided imagery, hero split layout, and Bento grid for the 5 protocols.",
+    "The Questionnaire MUST be multi-step using state. Collect demographics, goal, symptoms, and autoimmune flag.",
+    "If the autoimmune flag is checked, the plan must inform the user to return in 30 days for re-assessment.",
+    "Design the 'Prescription Card' with the exact AUTO, Code, RUN visual chips sequence. Add a Print/Download button.",
+    "Add a mock email capture step right before revealing the personalized plan.",
+    "Use JS/JSX exclusively. Do not use TSX."
+  ]
+}
