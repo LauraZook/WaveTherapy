@@ -45,8 +45,8 @@ export const PROTOCOLS_META = {
     accent: "terracotta",
   },
   meditation: {
-    title: "Deep Meditation",
-    blurb: "Run Mental Clarity during your meditation, then pause with any number key when complete.",
+    title: "Deep Meditation & Prayer",
+    blurb: "Get deeper into your spiritual practice with Wave Therapy for relaxation, focus and clarity.",
     image: "https://curawaves.com/cdn/shop/files/Rocks_2_453x640.jpg?v=1778559745",
     icon: "Brain",
     accent: "sage",

@@ -37,7 +37,7 @@ export default function Landing() {
     <div className="bg-paper">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-28 grid md:grid-cols-12 gap-10 items-center">
+        <div className="max-w-7xl mx-auto px-6 pt-12 md:pt-20 pb-12 md:pb-20 grid md:grid-cols-12 gap-10 items-center">
           <div className="md:col-span-7 stagger">
             <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-4 inline-flex items-center gap-2">
               <Waves className="w-3.5 h-3.5" /> NASA-backed square wave technology
@@ -46,7 +46,7 @@ export default function Landing() {
               Your personalized path to <em className="text-ocean not-italic font-medium">freedom from pain</em> and greater vitality.
             </h1>
             <p className="mt-6 text-lg text-ink-muted max-w-xl leading-relaxed">
-              Take the Wave Therapy questionnaire for a free personalized plan to get started feeling better each day.
+              Answer the Wave Therapy questionnaire for a free personalized plan to get started &amp; feel better each day.
               The program draws from 500+ frequencies and 100+ pre-programmed codes — tailored to your unique goals.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -86,8 +86,8 @@ export default function Landing() {
       </section>
 
       {/* Protocols Bento */}
-      <section id="protocols" className="max-w-7xl mx-auto px-6 py-20 md:py-28">
-        <div className="max-w-2xl mb-12">
+      <section id="protocols" className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+        <div className="max-w-2xl mb-10">
           <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">Five Protocol Pathways</p>
           <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">
             Five protocols. Hundreds of waves. One plan crafted for you.
@@ -128,15 +128,15 @@ export default function Landing() {
       </section>
 
       {/* FREEDOM section */}
-      <section className="bg-[#F5F2EB] py-20 md:py-28">
+      <section className="bg-[#F5F2EB] py-14 md:py-20">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-10 items-start">
           <div className="md:col-span-5">
             <p className="text-xs tracking-[0.25em] uppercase text-terracotta font-semibold mb-3">The Method</p>
             <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">
-              The F.R.E.E.D.O.M. healing framework.
+              The F.R.E.E.D.O.M. healing framework
             </h2>
             <p className="mt-4 text-ink-muted">
-              Wave Therapy is one tool inside a broader framework that empowers the body to heal itself — pain relief, restoration, electric health, emotional balance, detox, oxygen and mindfulness.
+              Wave Therapy is a powerful tool inside a broader healing framework that aids the body in healing itself — spiritual connection, restoration, electric health, emotional balance, detox, oxygenate and mindfulness.
             </p>
             <img src={FREEDOM_IMG} alt="Stacked stones — balance and natural healing" className="mt-6 w-full max-h-[560px] object-cover rounded-2xl border border-[#EAE5D9]" />
           </div>
@@ -160,8 +160,8 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section className="max-w-7xl mx-auto px-6 py-20 md:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-10">
+      <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-8">
           <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">How your plan works</p>
           <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">Easy to Use. Flexible Options.</h2>
         </div>
@@ -169,11 +169,11 @@ export default function Landing() {
           {[
             { step: "1", title: "Enter the sequence", body: "On your Wave Therapy device press AUTO, then the recommended Code number, then RUN to begin." },
             { step: "2", title: "Pause anytime", body: "Press any number key (1–9) to pause mid-session. Press RUN to resume exactly where you left off." },
-            { step: "3", title: "Follow your plan", body: "Your AI-generated schedule tells you which codes to run, when, and for how long." },
+            { step: "3", title: "Follow your plan", body: "Your AI-generated schedule shares which codes to run, when, and for how long along with tips and modifications." },
           ].map((s) => (
             <div key={s.step} className="bg-white border border-[#EAE5D9] rounded-2xl p-7 shadow-sm">
               <div className="text-5xl font-serif text-terracotta mb-3">{s.step}</div>
-              <h3 className="font-semibold text-ink mb-1.5">{s.title}</h3>
+              <h3 className="font-semibold text-ink mb-1.5 text-xl">{s.title}</h3>
               <p className="text-sm text-ink-muted leading-relaxed">{s.body}</p>
             </div>
           ))}
@@ -181,9 +181,9 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-[#F5F2EB] py-20 md:py-24">
+      <section className="bg-[#F5F2EB] py-14 md:py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="font-serif text-3xl md:text-4xl text-ink mb-10 text-center">Real stories from the CuraWaves community</h2>
+          <h2 className="font-serif text-3xl md:text-4xl text-ink mb-8 text-center">Real stories from the CuraWaves community</h2>
           <div className="grid md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t, i) => (
               <div key={i} className="bg-white border border-[#EAE5D9] rounded-2xl p-7">
@@ -200,7 +200,7 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="max-w-6xl mx-auto px-6 py-20 md:py-28">
+      <section className="max-w-6xl mx-auto px-6 py-14 md:py-20">
         <div className="grid md:grid-cols-12 gap-10 items-center">
           <div className="md:col-span-6 order-2 md:order-1">
             <div className="relative">

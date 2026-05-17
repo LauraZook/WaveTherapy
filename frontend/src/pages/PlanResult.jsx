@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { api } from "../lib/api";
 import CodeChip from "../components/CodeChip";
 
-const LENGTH_LABEL = { one_day: "1-Day", one_week: "1-Week", thirty_day: "30-Day" };
+const LENGTH_LABEL = { one_day: "One-Time", one_week: "1-Week", thirty_day: "30-Day" };
 
 const TIME_BADGE = {
   morning: { label: "Morning", Icon: Sun, cls: "bg-amber-50 text-amber-700 border-amber-200" },

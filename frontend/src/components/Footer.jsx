@@ -2,10 +2,10 @@ import React from "react";
 
 export const Footer = () => {
   return (
-    <footer className="bg-[#F5F2EB] border-t border-[#EAE5D9] mt-24 py-12 text-sm text-ink-muted" data-testid="site-footer">
+    <footer className="bg-[#F5F2EB] border-t border-[#EAE5D9] mt-16 py-10 text-sm text-ink-muted" data-testid="site-footer">
       <div className="max-w-5xl mx-auto px-6">
         {/* Coaching CTA */}
-        <div className="mb-10 bg-white border border-[#EAE5D9] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        <div className="mb-8 bg-white border border-[#EAE5D9] rounded-2xl p-6 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div>
             <h3 className="font-serif text-2xl text-ink mb-1">Want to talk through your plan?</h3>
             <p className="text-ink-muted leading-relaxed">

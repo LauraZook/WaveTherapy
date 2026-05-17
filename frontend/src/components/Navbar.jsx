@@ -16,13 +16,13 @@ export const Navbar = () => {
             className="h-9 md:h-10 w-auto object-contain"
           />
           <span className="hidden sm:inline-block text-[10px] tracking-[0.2em] uppercase text-ink-muted border-l border-[#EAE5D9] pl-3">
-            Wave Therapy Onboarding
+            Wave Therapy Plans
           </span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-ink-muted">
           <Link to="/" data-testid="nav-home" className={isActive("/") ? "text-ocean" : "hover:text-ocean transition-colors"}>Home</Link>
           <Link to="/onboarding" data-testid="nav-onboarding" className={isActive("/onboarding") ? "text-ocean" : "hover:text-ocean transition-colors"}>Build my plan</Link>
-          <Link to="/reassess" data-testid="nav-reassess" className={isActive("/reassess") ? "text-ocean" : "hover:text-ocean transition-colors"}>Re-assess</Link>
+          <Link to="/reassess" data-testid="nav-reassess" className={isActive("/reassess") ? "text-ocean" : "hover:text-ocean transition-colors"}>Optimize</Link>
         </nav>
         <Link
           to="/onboarding"

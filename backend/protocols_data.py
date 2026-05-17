@@ -114,8 +114,8 @@ PROTOCOLS = {
         ],
     },
     "meditation": {
-        "title": "Deep Meditation",
-        "description": "Run a focused, energizing or calming code DURING your meditation session. Pause anytime by pressing any number key (1–9) when your meditation is complete — the device pauses where you left off.",
+        "title": "Deep Meditation & Prayer",
+        "description": "Get deeper into your spiritual practice with Wave Therapy for relaxation, focus and clarity. Run a focused, energizing or calming code DURING your session and pause anytime by pressing any number key (1–9) when complete.",
         "codes": [
             {"code": 636, "name": "Mental Clarity (Meditation Companion)", "minutes": 45, "targets": "PRIMARY meditation companion — run during a 20–45 min sit; pause with any number key when complete"},
             {"code": 444, "name": "Pineal Gland & Cortex Rejuvenation", "minutes": 10, "targets": "third-eye / awareness support — great for shorter 10-min meditations"},

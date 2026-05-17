@@ -10,7 +10,7 @@ const GOALS = [
   { key: "detoxification", label: "Detoxification", desc: "Liver/kidney/lymph cleanse, heavy metals, chemicals", Icon: Droplets },
   { key: "immune_boost", label: "Immune Boost", desc: "Viral/bacterial support, chronic infections, EBV, Lyme", Icon: Shield },
   { key: "repair_recovery", label: "Repair & Recovery", desc: "Surgery, injury, fractures, sports performance", Icon: Zap },
-  { key: "meditation", label: "Deep Meditation", desc: "Run Mental Clarity during meditation; pause when complete", Icon: Brain },
+  { key: "meditation", label: "Deep Meditation & Prayer", desc: "Get deeper into your spiritual practice with Wave Therapy for relaxation, focus and clarity", Icon: Brain },
 ];
 
 const SYMPTOMS = [
@@ -437,9 +437,9 @@ export default function Onboarding() {
               <p className="text-ink-muted text-sm">Start small or commit to 30 days for deeper, lasting change.</p>
               <div className="grid gap-3 pt-2">
                 {[
-                  { key: "one_day", label: "1 Day", desc: "Try-it: 2–4 sessions to feel the device today." },
-                  { key: "one_week", label: "1 Week", desc: "7 days of staggered sessions for steady results." },
-                  { key: "thirty_day", label: "30 Days", desc: "Deep, consistent program for a whole-body reset, detoxification or to address chronic symptoms. We recommend an auto re-assessment to optimize every 30 days." },
+                  { key: "one_day", label: "One-Time", desc: "Try-it: 2–4 sessions to feel the device today." },
+                  { key: "one_week", label: "1-Week", desc: "7 days of staggered sessions for steady results." },
+                  { key: "thirty_day", label: "30-Days", desc: "Deep, consistent program for a whole-body reset, detoxification or to address chronic symptoms. We recommend an auto re-assessment to optimize every 30 days." },
                 ].map(({ key, label, desc }) => (
                   <button
                     key={key}
@@ -479,7 +479,7 @@ export default function Onboarding() {
                 <div><span className="text-ink-muted">Severity:</span> <span className="text-ink font-medium">{form.severity}/10</span></div>
                 <div><span className="text-ink-muted">Time per day:</span> <span className="text-ink font-medium">{form.minutes_per_day === "thirty" ? "30 min" : form.minutes_per_day === "sixty" ? "60 min" : "As recommended"}</span></div>
                 <div><span className="text-ink-muted">Preferred times:</span> <span className="text-ink font-medium">{form.preferred_times.length ? form.preferred_times.join(", ").replace(/_/g, " ") : "Any time"}</span></div>
-                <div><span className="text-ink-muted">Program length:</span> <span className="text-ink font-medium">{form.program_length.replace("_", " ")}</span></div>
+                <div><span className="text-ink-muted">Program length:</span> <span className="text-ink font-medium">{ { one_day: "One-Time", one_week: "1-week", thirty_day: "30-days" }[form.program_length] || form.program_length}</span></div>
                 {form.has_autoimmune && <div className="text-terracotta">Autoimmune flagged — 30-day re-assessment included.</div>}
                 {form.pregnancy_or_pacemaker && <div className="text-terracotta">Safety flag noted.</div>}
               </div>
