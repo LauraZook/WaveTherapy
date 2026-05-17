@@ -113,6 +113,18 @@ PROTOCOLS = {
             {"code": 397, "name": "Muscle Tremors", "minutes": 39, "targets": "Parkinson's-like tremors, muscle control"},
         ],
     },
+    "meditation": {
+        "title": "Deep Meditation",
+        "description": "Run a focused, energizing or calming code DURING your meditation session. Pause anytime by pressing any number key (1–9) when your meditation is complete — the device pauses where you left off.",
+        "codes": [
+            {"code": 636, "name": "Mental Clarity (Meditation Companion)", "minutes": 45, "targets": "PRIMARY meditation companion — run during a 20–45 min sit; pause with any number key when complete"},
+            {"code": 444, "name": "Pineal Gland & Cortex Rejuvenation", "minutes": 10, "targets": "third-eye / awareness support — great for shorter 10-min meditations"},
+            {"code": 222, "name": "DNA Healing & Cellular Rejuvenation", "minutes": 4, "targets": "short pre-meditation primer"},
+            {"code": 647, "name": "Earth Resonance (Calm Focus)", "minutes": 30, "targets": "calmer breath-focused meditation, evenings"},
+            {"code": 351, "name": "Calm / Insomnia Soothe", "minutes": 24, "targets": "deeply calming for body-scan or yoga-nidra style meditation"},
+            {"code": 235, "name": "Mood Support", "minutes": 9, "targets": "uplift before meditation"},
+        ],
+    },
 }
 
 

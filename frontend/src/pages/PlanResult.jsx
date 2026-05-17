@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Printer, Mail, ArrowRight, AlertTriangle, Loader2, CheckCircle2, BookOpen, Sun, Moon, Briefcase, Cloud, Lightbulb } from "lucide-react";
+import { Printer, Mail, ArrowRight, AlertTriangle, Loader2, CheckCircle2, BookOpen, Sun, Moon, Briefcase, Cloud, Lightbulb, Download, NotebookPen, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import CodeChip from "../components/CodeChip";
@@ -27,6 +27,10 @@ export default function PlanResult() {
   const [loading, setLoading] = useState(true);
   const [emailing, setEmailing] = useState(false);
   const [emailedAt, setEmailedAt] = useState(null);
+  const [view, setView] = useState("detail");  // "detail" | "grid"
+  const [notes, setNotes] = useState("");
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesSavedAt, setNotesSavedAt] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +38,8 @@ export default function PlanResult() {
       try {
         const { data } = await api.get(`/plan/${id}`);
         if (!cancelled) setPlan(data);
+        const notesRes = await api.get(`/plan/${id}/notes`);
+        if (!cancelled) setNotes(notesRes.data.notes || "");
       } catch (e) {
         toast.error("Plan not found.");
       } finally {
@@ -42,6 +48,82 @@ export default function PlanResult() {
     })();
     return () => { cancelled = true; };
   }, [id]);
+
+  // Debounced auto-save for notes
+  useEffect(() => {
+    if (!plan) return;
+    const t = setTimeout(async () => {
+      setNotesSaving(true);
+      try {
+        await api.patch(`/plan/${id}/notes`, { notes });
+        setNotesSavedAt(new Date().toLocaleTimeString());
+      } catch (e) {
+        // silent
+      } finally {
+        setNotesSaving(false);
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [notes, id, plan]);
+
+  const downloadPlan = () => {
+    const sessionsHTML = plan.schedule.map((d) => `
+      <h3 style="font-family:Georgia,serif;color:#2C5E7A;margin:18px 0 6px;font-weight:500;">${d.label}</h3>
+      <table width="100%" cellspacing="0" style="border-collapse:collapse;font-size:14px;color:#2A3439;">
+        ${d.sessions.map((s) => `
+          <tr>
+            <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;font-family:monospace;width:32%;">AUTO &nbsp;|&nbsp; <b style="color:#2C5E7A">${s.code}</b> &nbsp;|&nbsp; RUN</td>
+            <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;">${s.name}${s.time_of_day ? ` <span style="font-size:10px;background:#E9F1F5;color:#2C5E7A;padding:2px 8px;border-radius:12px;margin-left:6px;">${s.time_of_day.replace("_"," ")}</span>` : ""}</td>
+            <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;text-align:right;width:80px;">${s.minutes} min</td>
+          </tr>
+        `).join("")}
+      </table>
+    `).join("");
+
+    const safetyHTML = plan.safety_notes?.length
+      ? `<div style="background:#FDF1E5;color:#7A5A3A;padding:12px 14px;border-radius:8px;font-size:13px;margin:18px 0;"><b>Safety notes:</b><ul style="margin:6px 0 0 18px;padding:0;">${plan.safety_notes.map((s) => `<li>${s}</li>`).join("")}</ul></div>`
+      : "";
+
+    const tipsHTML = plan.tips?.length
+      ? `<h3 style="font-family:Georgia,serif;color:#D27A59;margin:24px 0 8px;font-weight:500;">Tips for the best results</h3><ul style="font-size:14px;color:#2A3439;padding-left:20px;">${plan.tips.map((t) => `<li style="margin-bottom:6px;">${t}</li>`).join("")}</ul>`
+      : "";
+
+    const html = `<!doctype html>
+<html><head><meta charset="utf-8"/>
+<title>CuraWaves Plan — ${plan.headline}</title>
+<style>body{margin:0;background:#FDFBF7;font-family:Arial,sans-serif;color:#2A3439;padding:24px;} .card{max-width:760px;margin:0 auto;background:#fff;border:1px solid #EAE5D9;border-radius:16px;padding:32px;}</style>
+</head><body>
+<div class="card">
+  <p style="letter-spacing:0.2em;text-transform:uppercase;font-size:11px;color:#85A094;margin:0;">CuraWaves Personalized Program</p>
+  <h1 style="font-family:Georgia,serif;font-weight:400;color:#2C5E7A;margin:8px 0 4px;font-size:30px;">${plan.headline}</h1>
+  <p style="color:#5C6A72;margin:0 0 18px;">${plan.ai_summary}</p>
+  <p style="font-size:12px;color:#7A5A3A;background:#FDF1E5;padding:10px 14px;border-radius:8px;">For education &amp; investigative use only. Wave Therapy is not intended to diagnose, treat, cure or prevent any disease.</p>
+  <p style="font-size:13px;color:#2C5E7A;background:#E9F1F5;padding:10px 14px;border-radius:8px;"><b>Daily tip:</b> ${plan.daily_tip}</p>
+  ${safetyHTML}
+  ${sessionsHTML}
+  <h3 style="font-family:Georgia,serif;color:#2C5E7A;margin:24px 0 8px;font-weight:500;">Getting started</h3>
+  <ol style="font-size:14px;line-height:1.6;padding-left:20px;">
+    <li>Plug the power cord into the back of the device, then into a wall outlet.</li>
+    <li>Choose your accessory — Stainless Steel Cylinders for whole-body, or Electrode Pads placed on the target area.</li>
+    <li>Press AUTO, type the Code, press RUN.</li>
+    <li>Pause anytime with any number key (1–9); resume by pressing RUN.</li>
+  </ol>
+  ${tipsHTML}
+  <p style="font-size:11px;color:#A0AAB0;margin-top:24px;">Plan ID: ${plan.id} · Generated ${new Date(plan.created_at).toLocaleString()}</p>
+</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `CuraWaves-Plan-${plan.first_name}-${plan.id.slice(0,8)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Plan downloaded. Open the file and use Print → Save as PDF if you'd like a PDF.");
+  };
 
   const sendEmail = async () => {
     setEmailing(true);
@@ -85,7 +167,21 @@ export default function PlanResult() {
             <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold">Your personalized program</p>
             <h1 className="font-serif text-3xl md:text-4xl text-ink mt-1">{plan.headline}</h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              data-testid="plan-view-toggle"
+              onClick={() => setView(view === "detail" ? "grid" : "detail")}
+              className="inline-flex items-center gap-2 bg-white border border-[#EAE5D9] hover:border-ocean text-ink-muted hover:text-ocean text-sm px-4 py-2.5 rounded-full transition-colors"
+            >
+              {view === "detail" ? <><LayoutGrid className="w-4 h-4" /> Grid view</> : <><List className="w-4 h-4" /> Detail view</>}
+            </button>
+            <button
+              data-testid="plan-download-button"
+              onClick={downloadPlan}
+              className="inline-flex items-center gap-2 bg-white border border-[#EAE5D9] hover:border-ocean text-ink-muted hover:text-ocean text-sm px-4 py-2.5 rounded-full transition-colors"
+            >
+              <Download className="w-4 h-4" /> Download
+            </button>
             <button
               data-testid="plan-print-button"
               onClick={() => window.print()}
@@ -138,11 +234,29 @@ export default function PlanResult() {
           )}
 
           {/* Schedule */}
-          <div className="mt-8 space-y-6" data-testid="plan-schedule">
-            {plan.schedule.map((d) => (
-              <div key={d.day} className="bg-white border border-[#EAE5D9] rounded-xl p-5">
-                <h3 className="font-serif text-xl text-ocean mb-3">{d.label}</h3>
-                <div className="space-y-3">
+          <div className="mt-8" data-testid="plan-schedule">
+            {view === "grid" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" data-testid="plan-grid">
+                {plan.schedule.map((d) => (
+                  <div key={d.day} className="bg-white border border-[#EAE5D9] rounded-xl p-3 hover:border-ocean/40 transition-colors">
+                    <div className="text-[10px] uppercase tracking-wider text-sage font-semibold mb-1.5">{d.label}</div>
+                    <div className="space-y-1.5">
+                      {d.sessions.map((s, i) => (
+                        <div key={i} className="text-xs text-ink-muted">
+                          <span className="font-mono text-ocean font-bold">{s.code}</span> · {s.minutes}m
+                          <div className="text-[10px] text-ink-muted/70 truncate">{s.name}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {plan.schedule.map((d) => (
+                  <div key={d.day} className="bg-white border border-[#EAE5D9] rounded-xl p-5">
+                    <h3 className="font-serif text-xl text-ocean mb-3">{d.label}</h3>
+                    <div className="space-y-3">
                   {d.sessions.map((s, i) => {
                     const tb = s.time_of_day && TIME_BADGE[s.time_of_day];
                     return (
@@ -167,7 +281,9 @@ export default function PlanResult() {
                   })}
                 </div>
               </div>
-            ))}
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mt-8 pt-6 border-t border-dashed border-sand-500 text-xs text-ink-muted">
@@ -212,6 +328,33 @@ export default function PlanResult() {
             </ul>
           </div>
         )}
+
+        {/* Personal log / notes */}
+        <div className="no-print mt-6 bg-white rounded-2xl border border-[#EAE5D9] p-6 md:p-8" data-testid="plan-notes">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+            <div className="flex items-center gap-2">
+              <NotebookPen className="w-5 h-5 text-ocean" />
+              <h3 className="font-serif text-2xl text-ink">My notes &amp; personal log</h3>
+            </div>
+            <div className="text-xs text-ink-muted">
+              {notesSaving ? (
+                <span className="inline-flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving…</span>
+              ) : notesSavedAt ? (
+                <span className="inline-flex items-center gap-1 text-sage"><CheckCircle2 className="w-3 h-3" /> Saved at {notesSavedAt}</span>
+              ) : (
+                <span>Auto-saves as you type</span>
+              )}
+            </div>
+          </div>
+          <p className="text-sm text-ink-muted mb-3">Track how you feel each day, jot modifications to your plan, log session times, or note questions for your CuraWaves coach.</p>
+          <textarea
+            data-testid="plan-notes-textarea"
+            className="w-full bg-cream/60 border border-sand-300 rounded-lg px-4 py-3 focus:border-ocean focus:ring-2 focus:ring-ocean/20 outline-none min-h-[180px] font-sans text-sm leading-relaxed"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Day 1 — ran 646 at 9pm, slept like a rock.&#10;Day 2 — added 274 for back pain, felt looser by evening.&#10;Question for coach: …"
+          />
+        </div>
 
         {plan.needs_30day_reassessment && (
           <div className="no-print mt-8 bg-white border border-[#EAE5D9] rounded-2xl p-6 flex items-center justify-between gap-4 flex-wrap">

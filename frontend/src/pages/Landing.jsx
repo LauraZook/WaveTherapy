@@ -1,12 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import {
-  Sparkles, Activity, Droplets, Shield, Zap,
+  Sparkles, Activity, Droplets, Shield, Zap, Brain,
   ArrowRight, Heart, Waves, Quote, ChevronRight,
 } from "lucide-react";
 import { PROTOCOLS_META, PROTOCOL_ORDER } from "../lib/api";
 
-const Icons = { Sparkles, Activity, Droplets, Shield, Zap };
+const Icons = { Sparkles, Activity, Droplets, Shield, Zap, Brain };
 
 const HERO_IMG = "https://curawaves.com/cdn/shop/files/Product_image_WT_1020x693.jpg?v=1696906574";
 const FREEDOM_IMG = "https://curawaves.com/cdn/shop/files/Rocks_2_453x640.jpg?v=1778559745";
@@ -30,7 +30,7 @@ const TESTIMONIALS = [
     quote: "Wave Therapy accelerated my healing after surgeries. Both surgeons were amazed at how soon I was back on my feet." },
 ];
 
-const bentoSpans = ["md:col-span-7", "md:col-span-5", "md:col-span-5", "md:col-span-7", "md:col-span-12"];
+const bentoSpans = ["md:col-span-7", "md:col-span-5", "md:col-span-4", "md:col-span-4", "md:col-span-4", "md:col-span-12"];
 
 export default function Landing() {
   return (

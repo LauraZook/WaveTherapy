@@ -49,7 +49,7 @@ class QuestionnaireSubmission(BaseModel):
     first_name: str
     age: int = Field(ge=1, le=120)
     sex: str  # male | female | other | prefer_not_to_say
-    primary_goal: str  # health_wellness | pain_inflammation | detoxification | immune_boost | repair_recovery
+    primary_goal: str  # health_wellness | pain_inflammation | detoxification | immune_boost | repair_recovery | meditation
     symptoms: List[str] = []
     symptom_details: str = ""
     severity: int = Field(ge=1, le=10)
@@ -101,6 +101,10 @@ class GeneratedPlan(BaseModel):
 
 class EmailPlanRequest(BaseModel):
     plan_id: str
+
+
+class NotesUpdate(BaseModel):
+    notes: str
 
 
 class ReassessRequest(BaseModel):
@@ -184,10 +188,16 @@ INSTRUCTIONS:
    - For 1-week detox plans, do Week 1 only. For 1-day, just General Detox 237 + Lymph Stasis 377.
 8. Lead with the primary_goal category but blend 1–2 supportive codes from other categories where helpful.
 9. If autoimmune is true OR severity >= 8 OR pregnancy_or_pacemaker is true: set needs_30day_reassessment=true and include 1–2 safety_notes (e.g., "Consult your physician before use if you have a pacemaker", "Schedule a 30-day re-assessment for autoimmune conditions").
-10. Provide a warm, friendly 2–3 sentence ai_summary addressing the user by first name.
-11. Provide a short headline (max 8 words) and a daily_tip (1 sentence on hydration/sleep/breathwork).
-12. Provide 3–5 practical TIPS in the tips array (hydration during/after sessions, electrode pad vs stainless cylinder choice, consistency of daily use, pause/resume guidance, when to call a coach, etc.).
-13. Output STRICT JSON with this schema (no extra fields, no comments):
+10. **MEDITATION RULES** (if primary_goal == meditation):
+   - Anchor every meditation day with code 636 (Mental Clarity) run DURING the meditation session.
+   - Tell the user to pause the device with any number key (1–9) when their meditation ends — the device will hold the session there.
+   - For shorter 10-min sits, recommend code 444 (Pineal Gland) instead.
+   - On rest days you can suggest 647 (Earth Resonance) or 351 (Calm) for evening wind-down meditation.
+   - Each session.notes should remind them: "Pause with any number key (1–9) when your meditation is complete."
+11. Provide a warm, friendly 2–3 sentence ai_summary addressing the user by first name.
+12. Provide a short headline (max 8 words) and a daily_tip (1 sentence on hydration/sleep/breathwork).
+13. Provide 3–5 practical TIPS in the tips array (hydration during/after sessions, electrode pad vs stainless cylinder choice, consistency of daily use, pause/resume guidance, when to call a coach, etc.).
+14. Output STRICT JSON with this schema (no extra fields, no comments):
 
 {{
   "headline": "string",
@@ -361,6 +371,25 @@ async def get_plan(plan_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Plan not found")
     return doc
+
+
+@api_router.patch("/plan/{plan_id}/notes")
+async def update_plan_notes(plan_id: str, payload: NotesUpdate):
+    result = await db.plans.update_one(
+        {"id": plan_id},
+        {"$set": {"user_notes": payload.notes, "notes_updated_at": _now_iso()}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return {"status": "ok", "saved_at": _now_iso()}
+
+
+@api_router.get("/plan/{plan_id}/notes")
+async def get_plan_notes(plan_id: str):
+    doc = await db.plans.find_one({"id": plan_id}, {"_id": 0, "user_notes": 1, "notes_updated_at": 1})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return {"notes": doc.get("user_notes", ""), "updated_at": doc.get("notes_updated_at")}
 
 
 @api_router.post("/plan/email")

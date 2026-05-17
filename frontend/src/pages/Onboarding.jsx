@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2, Sparkles, Activity, Droplets, Shield, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Activity, Droplets, Shield, Zap, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 
@@ -10,6 +10,7 @@ const GOALS = [
   { key: "detoxification", label: "Detoxification", desc: "Liver/kidney/lymph cleanse, heavy metals, chemicals", Icon: Droplets },
   { key: "immune_boost", label: "Immune Boost", desc: "Viral/bacterial support, chronic infections, EBV, Lyme", Icon: Shield },
   { key: "repair_recovery", label: "Repair & Recovery", desc: "Surgery, injury, fractures, sports performance", Icon: Zap },
+  { key: "meditation", label: "Deep Meditation", desc: "Run Mental Clarity during meditation; pause when complete", Icon: Brain },
 ];
 
 const SYMPTOMS = [
@@ -415,7 +416,7 @@ export default function Onboarding() {
                 {[
                   { key: "one_day", label: "1 Day", desc: "Try-it: 2–4 sessions to feel the device today." },
                   { key: "one_week", label: "1 Week", desc: "7 days of staggered sessions for steady results." },
-                  { key: "thirty_day", label: "30 Days", desc: "Deep program for chronic or autoimmune cases. Auto re-assessment at day 30." },
+                  { key: "thirty_day", label: "30 Days", desc: "Deep, consistent program for a whole-body reset, detoxification or to address chronic symptoms. We recommend an auto re-assessment to optimize every 30 days." },
                 ].map(({ key, label, desc }) => (
                   <button
                     key={key}
