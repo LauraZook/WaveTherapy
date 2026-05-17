@@ -72,7 +72,7 @@ export default function PlanResult() {
       <table width="100%" cellspacing="0" style="border-collapse:collapse;font-size:14px;color:#2A3439;">
         ${d.sessions.map((s) => {
           const keystrokes = s.code === 444
-            ? `7 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b style="color:#2C5E7A">444</b> &nbsp;|&nbsp; RUN`
+            ? `10 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b style="color:#2C5E7A">444</b> &nbsp;|&nbsp; RUN`
             : s.code === 161
             ? `30 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b style="color:#2C5E7A">161</b> &nbsp;|&nbsp; RUN`
             : `AUTO &nbsp;|&nbsp; <b style="color:#2C5E7A">${s.code}</b> &nbsp;|&nbsp; RUN`;

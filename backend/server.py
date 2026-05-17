@@ -173,7 +173,7 @@ INSTRUCTIONS:
 2. Each session must be one entry from the catalog. Use exact code + name + minutes.
 3. Each session instructions string MUST follow this format:
    - DEFAULT (most codes — AUTO programs): `"Enter: AUTO, <CODE>, RUN"`
-   - **Code 444 (Pineal — single channel)**: instructions MUST be exactly `"Press: 7, SELECT, 444, RUN"`
+   - **Code 444 (Pineal — single channel)**: instructions MUST be exactly `"Press: 10, SELECT, 444, RUN"` (the leading number is the minute duration for the single channel — default is 3 min, we set 10)
    - **Code 161 (Cellular Cleanse — single channel)**: instructions MUST be exactly `"Press: 30, SELECT, 161, RUN"`
 3a. **Cross-protocol go-to sessions** — feel free to include these in ANY plan (regardless of primary_goal) as an occasional weekly support:
    - **Code 161 (Cellular Cleanse)** — a great WEEKLY solo session; include it once per week for meditation, health & wellness, pain, detoxification, repair & recovery, AND immune boost programs. Always 30 minutes.
@@ -290,7 +290,7 @@ INSTRUCTIONS:
 # Deterministic overrides for codes with special keystroke sequences or fixed durations.
 # Applied AFTER the LLM responds so we don't depend on the model getting every detail right.
 SPECIAL_CODE_OVERRIDES = {
-    444: {"instructions": "Press: 7, SELECT, 444, RUN", "minutes": 10, "max_per_week": 4},  # every other day
+    444: {"instructions": "Press: 10, SELECT, 444, RUN", "minutes": 10, "max_per_week": 4},  # every other day, 10-min single channel
     161: {"instructions": "Press: 30, SELECT, 161, RUN", "minutes": 30, "max_per_week": 1},  # weekly
     646: {"instructions": "Enter: AUTO, 646, RUN", "minutes": 90, "max_per_week": 1},  # weekly evening umbrella
 }
@@ -326,7 +326,7 @@ def _build_plan_html(plan: Dict[str, Any]) -> str:
         for s in d["sessions"]:
             code = s["code"]
             if code == 444:
-                keystrokes = "7 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b>444</b> &nbsp;|&nbsp; RUN"
+                keystrokes = "10 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b>444</b> &nbsp;|&nbsp; RUN"
             elif code == 161:
                 keystrokes = "30 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b>161</b> &nbsp;|&nbsp; RUN"
             else:

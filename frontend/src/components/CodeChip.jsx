@@ -3,7 +3,7 @@ import React from "react";
 // Single-channel codes use a different keystroke sequence than the default AUTO programs.
 // Map: code → ordered keystroke tokens to render on the chip.
 const SPECIAL_KEYSTROKES = {
-  444: ["7", "SELECT", "444", "RUN"],
+  444: ["10", "SELECT", "444", "RUN"],
   161: ["30", "SELECT", "161", "RUN"],
 };
 
