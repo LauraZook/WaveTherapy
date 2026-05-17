@@ -296,14 +296,29 @@ def _build_plan_html(plan: Dict[str, Any]) -> str:
 
 
 async def _send_email_async(to: str, subject: str, html: str):
-    """Send via Resend. Returns dict or raises."""
+    """Send via Resend. Returns dict or raises HTTPException with a friendly message."""
     if not RESEND_API_KEY or RESEND_API_KEY.startswith("re_placeholder"):
         logger.warning("RESEND_API_KEY not configured — email send skipped (returning mock).")
         return {"id": "mock-no-resend-key", "mocked": True}
 
     params = {"from": SENDER_EMAIL, "to": [to], "subject": subject, "html": html}
-    result = await asyncio.to_thread(resend.Emails.send, params)
-    return result
+    try:
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        return result
+    except Exception as e:
+        msg = str(e)
+        logger.error(f"Resend send failed: {msg}")
+        # Detect Resend's free-tier "verify your domain" limitation
+        if "verify a domain" in msg.lower() or "can only send testing emails" in msg.lower():
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Resend is in test mode — emails can only be sent to your verified account email. "
+                    "To send to any address, verify a domain at resend.com/domains and update SENDER_EMAIL in .env "
+                    "to an address on that domain (e.g. plans@curawaves.com)."
+                ),
+            )
+        raise HTTPException(status_code=502, detail=f"Email send failed: {msg}")
 
 
 # ----------------- Routes -----------------
