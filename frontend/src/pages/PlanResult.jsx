@@ -109,6 +109,11 @@ export default function PlanResult() {
     <li>Pause anytime with any number key (1–9); resume by pressing RUN.</li>
   </ol>
   ${tipsHTML}
+  <div style="margin-top:28px;padding:20px;background:#F5F2EB;border:1px solid #EAE5D9;border-radius:12px;text-align:center;">
+    <h3 style="font-family:Georgia,serif;color:#2A3439;margin:0 0 6px;font-weight:500;font-size:18px;">Want to talk through your plan?</h3>
+    <p style="color:#5C6A72;font-size:13px;margin:0 0 14px;line-height:1.55;">To discuss your Wave Therapy personalized plan with a CuraWaves Health Coach, please book a virtual coaching session with our team.</p>
+    <a href="https://curawaves.com/products/wellness-consultation-concierge-services" style="display:inline-block;background:#2C5E7A;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">Book a coaching session</a>
+  </div>
   <p style="font-size:11px;color:#A0AAB0;margin-top:24px;">Plan ID: ${plan.id} · Generated ${new Date(plan.created_at).toLocaleString()}</p>
 </div>
 </body></html>`;
