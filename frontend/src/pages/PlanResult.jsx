@@ -16,7 +16,7 @@ const TIME_BADGE = {
 
 const SETUP_STEPS = [
   { title: "Connect power", body: "Plug the power cord into the back of the machine, then into a wall outlet." },
-  { title: "Choose your accessory", body: "Stainless Steel Cylinders (larger black cord, banana plugs) for full-body sessions, OR Electrode Pads (thin black cord) placed left/right or front/back of the target area." },
+  { title: "Choose your accessory", body: "Stainless Steel Cylinders (larger black cord, banana plugs in the right and left side of the machine) for full-body sessions, OR Electrode Pads (thin black cord plugs in the back of the machine like the power cord) — place pads on the left/right or front/back of the target area." },
   { title: "Enter your code", body: "Press AUTO, type the Code number, then press RUN. The session starts automatically." },
   { title: "Pause & resume", body: "Press any number key (1–9) to pause. Press RUN to resume right where you left off." },
 ];
@@ -104,7 +104,7 @@ export default function PlanResult() {
   <h3 style="font-family:Georgia,serif;color:#2C5E7A;margin:24px 0 8px;font-weight:500;">Getting started</h3>
   <ol style="font-size:14px;line-height:1.6;padding-left:20px;">
     <li>Plug the power cord into the back of the device, then into a wall outlet.</li>
-    <li>Choose your accessory — Stainless Steel Cylinders for whole-body, or Electrode Pads placed on the target area.</li>
+    <li>Choose your accessory — <b>Stainless Steel Cylinders</b> (larger black cord, banana plugs in the right and left side of the machine) for full-body sessions, OR <b>Electrode Pads</b> (thin black cord plugs in the back of the machine like the power cord) placed on the left/right or front/back of the target area.</li>
     <li>Press AUTO, type the Code, press RUN.</li>
     <li>Pause anytime with any number key (1–9); resume by pressing RUN.</li>
   </ol>
