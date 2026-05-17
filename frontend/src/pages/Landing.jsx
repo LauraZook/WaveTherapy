@@ -200,18 +200,33 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
-        <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">Take one step toward feeling great.</h2>
-        <p className="mt-4 text-ink-muted max-w-xl mx-auto">
-          The questionnaire takes about 3 minutes. Your plan arrives instantly with day-by-day codes you can run on your Wave Therapy machine.
-        </p>
-        <Link
-          to="/onboarding"
-          data-testid="footer-cta-button"
-          className="mt-8 bg-ocean hover:bg-ocean-dark text-white text-base font-medium px-8 py-4 rounded-full inline-flex items-center gap-2 transition-all active:scale-95"
-        >
-          Begin my health questionnaire <ArrowRight className="w-4 h-4" />
-        </Link>
+      <section className="max-w-6xl mx-auto px-6 py-20 md:py-28">
+        <div className="grid md:grid-cols-12 gap-10 items-center">
+          <div className="md:col-span-6 order-2 md:order-1">
+            <div className="relative">
+              <div className="absolute -inset-3 bg-terracotta-light rounded-tr-[60px] rounded-bl-[60px] rotate-1"></div>
+              <img
+                src="https://curawaves.com/cdn/shop/products/ScreenShot2022-01-17at10.59.02PM_893x479.png?v=1642489164"
+                alt="Heart drawn in beach sand"
+                className="relative w-full h-72 md:h-80 object-cover rounded-tr-[60px] rounded-bl-[60px] border border-[#EAE5D9]"
+              />
+            </div>
+          </div>
+          <div className="md:col-span-6 order-1 md:order-2 text-center md:text-left">
+            <p className="text-xs tracking-[0.25em] uppercase text-terracotta font-semibold mb-3">Your next step</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">Take one step toward feeling great.</h2>
+            <p className="mt-4 text-ink-muted max-w-xl">
+              The questionnaire takes about 3 minutes. Your plan arrives instantly with day-by-day codes you can run on your Wave Therapy machine.
+            </p>
+            <Link
+              to="/onboarding"
+              data-testid="footer-cta-button"
+              className="mt-8 bg-ocean hover:bg-ocean-dark text-white text-base font-medium px-8 py-4 rounded-full inline-flex items-center gap-2 transition-all active:scale-95"
+            >
+              Begin my health questionnaire <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );
