@@ -46,7 +46,7 @@ export default function Landing() {
               Your personalized path to <em className="text-ocean not-italic font-medium">freedom from pain</em> and greater vitality.
             </h1>
             <p className="mt-6 text-lg text-ink-muted max-w-xl leading-relaxed">
-              Answer the Wave Therapy questionnaire for a free personalized plan to help you get started and feeling better each day.
+              Take the Wave Therapy questionnaire for a free personalized plan to get started feeling better each day.
               The program draws from 500+ frequencies and 100+ pre-programmed codes — tailored to your unique goals.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
