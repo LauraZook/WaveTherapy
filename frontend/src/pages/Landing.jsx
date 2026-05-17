@@ -9,7 +9,7 @@ import { PROTOCOLS_META, PROTOCOL_ORDER } from "../lib/api";
 const Icons = { Sparkles, Activity, Droplets, Shield, Zap };
 
 const HERO_IMG = "https://curawaves.com/cdn/shop/files/Product_image_WT_1020x693.jpg?v=1696906574";
-const FREEDOM_IMG = "https://curawaves.com/cdn/shop/products/ScreenShot2022-01-17at10.59.02PM_893x479.png?v=1642489164";
+const FREEDOM_IMG = "https://curawaves.com/cdn/shop/files/Rocks_2_453x640.jpg?v=1778559745";
 
 const FREEDOM = [
   { letter: "F", title: "Faith. Hope. Love.", body: "Our bodies are divinely designed to heal naturally. Grow your faith, hope and receive more love." },
@@ -138,7 +138,7 @@ export default function Landing() {
             <p className="mt-4 text-ink-muted">
               Wave Therapy is one tool inside a broader framework that empowers the body to heal itself — pain relief, restoration, electric health, emotional balance, detox, oxygen and mindfulness.
             </p>
-            <img src={FREEDOM_IMG} alt="FREEDOM method" className="mt-6 w-full rounded-2xl border border-[#EAE5D9]" />
+            <img src={FREEDOM_IMG} alt="Stacked stones — balance and natural healing" className="mt-6 w-full max-h-[560px] object-cover rounded-2xl border border-[#EAE5D9]" />
           </div>
           <div className="md:col-span-7 flex flex-col gap-3">
             {FREEDOM.map((f, i) => (
