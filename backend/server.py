@@ -179,7 +179,12 @@ INSTRUCTIONS:
    - **Code 161 (Cellular Cleanse — single channel)**: instructions MUST be exactly `"Press: 30, SELECT, 161, RUN"`
 3a. **Cross-protocol go-to sessions** — feel free to include these in ANY plan (regardless of primary_goal) as an occasional weekly support:
    - **Code 161 (Cellular Cleanse)** — a great WEEKLY solo session; include it once per week for meditation, health & wellness, pain, detoxification, repair & recovery, AND immune boost programs. Always 30 minutes.
-   - **Code 646 (Health, Wellness & Rejuvenation)** — a WEEKLY 90-MINUTE umbrella session, EVENING only. Schedule ONCE PER WEEK (not nightly). MUST use full 90 minutes — do NOT shorten. Skip it on 1-day plans unless the user has plenty of time.
+   - **Code 646 (Health, Wellness & Rejuvenation)** — a 90-MINUTE evening umbrella session done IN BED while listening to music, watching a movie, or drifting off to sleep. MUST use full 90 minutes — do NOT shorten. EVENING ONLY.
+     - **MANDATORY** when `minutes_per_day` is `sixty` or `as_recommended`:
+       - `one_week` plans → include Code 646 AT LEAST 1 time (typically on Day 6 or Day 7).
+       - `thirty_day` plans → include Code 646 AT LEAST 2 times, spaced roughly 2 weeks apart (e.g. Day 7 and Day 21).
+     - For each 646 session, set `notes` to something like: "Run this in bed at night — great to do while listening to music, watching a movie, or drifting off to sleep."
+     - Skip on 1-day plans, and skip when `minutes_per_day` is `thirty` (not enough time budget).
 4. **MINUTES BUDGET**: Total session minutes per day SHOULD stay near {minutes_budget} minutes. Pick fewer/shorter codes if needed to fit. **HARD CEILING: NEVER schedule more than 180 minutes (3 hours) of sessions in a single day** — for typical daily practice, 60–90 minutes is sufficient. If user picked "as_recommended", target ~90 minutes.
 5. **TIME-OF-DAY RULES** (set the time_of_day field on each session):
    - User's preferred slots: {times_text}.
@@ -318,20 +323,26 @@ INSTRUCTIONS:
             )
             raise HTTPException(status_code=502, detail="Failed to parse plan from AI. Please try again.")
 
-    _normalize_schedule(data)
+    _normalize_schedule(data, sub)
     return data
 
 
 # Deterministic overrides for codes with special keystroke sequences or fixed durations.
 # Applied AFTER the LLM responds so we don't depend on the model getting every detail right.
 SPECIAL_CODE_OVERRIDES = {
-    444: {"instructions": "Press: 10, SELECT, 444, RUN", "minutes": 10, "max_per_week": 4},  # every other day, 10-min single channel
-    161: {"instructions": "Press: 30, SELECT, 161, RUN", "minutes": 30, "max_per_week": 1},  # weekly
-    646: {"instructions": "Enter: AUTO, 646, RUN", "minutes": 90, "max_per_week": 1},  # weekly evening umbrella
+    444: {"instructions": "Press: 10, SELECT, 444, RUN", "minutes": 10, "max_per_plan": 4},  # every other day, 10-min single channel
+    161: {"instructions": "Press: 30, SELECT, 161, RUN", "minutes": 30, "max_per_plan": 1},  # weekly
+    # 646 enforcement is handled separately by _enforce_646_minimums (requires program_length context).
+    646: {"instructions": "Enter: AUTO, 646, RUN", "minutes": 90},
 }
 
+CODE_646_NOTE = (
+    "Run this in bed at night — perfect to do while listening to music, "
+    "watching a movie, or drifting off to sleep."
+)
 
-def _normalize_schedule(data: Dict[str, Any]) -> None:
+
+def _normalize_schedule(data: Dict[str, Any], sub: "QuestionnaireSubmission") -> None:
     """Mutates data['schedule'] in-place to enforce special-code rules."""
     schedule = data.get("schedule") or []
     code_counts: Dict[int, int] = {}
@@ -341,16 +352,86 @@ def _normalize_schedule(data: Dict[str, Any]) -> None:
             code = s.get("code")
             override = SPECIAL_CODE_OVERRIDES.get(code)
             if override:
-                # Enforce frequency cap across the whole plan window
-                used = code_counts.get(code, 0)
-                if used >= override["max_per_week"]:
-                    # Skip this duplicate occurrence
-                    continue
-                code_counts[code] = used + 1
                 s["instructions"] = override["instructions"]
                 s["minutes"] = override["minutes"]
+                # Enforce per-plan frequency cap only for codes that have one
+                cap = override.get("max_per_plan")
+                if cap is not None:
+                    used = code_counts.get(code, 0)
+                    if used >= cap:
+                        continue  # skip duplicate occurrence
+                    code_counts[code] = used + 1
+                # Standardize 646 evening + bedtime notes
+                if code == 646:
+                    s["time_of_day"] = "evening"
+                    if not s.get("notes") or "bed" not in s["notes"].lower():
+                        s["notes"] = CODE_646_NOTE
             kept_sessions.append(s)
         day["sessions"] = kept_sessions
+
+    _enforce_646_minimums(schedule, sub)
+
+
+def _enforce_646_minimums(schedule: List[Dict[str, Any]], sub: "QuestionnaireSubmission") -> None:
+    """Guarantee Code 646 appears the required number of times for the given plan."""
+    # Only enforce when the user has the daily time budget for a 90-min evening session.
+    if sub.minutes_per_day not in ("sixty", "as_recommended"):
+        return
+
+    if sub.program_length == "one_week":
+        required, target_days = 1, [7, 6]      # prefer Day 7, fallback Day 6
+    elif sub.program_length == "thirty_day":
+        required, target_days = 2, [7, 21, 14, 28]
+    else:
+        return  # 1-day plans skip 646
+
+    existing = sum(
+        1
+        for day in schedule
+        for s in day.get("sessions", [])
+        if s.get("code") == 646
+    )
+    if existing >= required:
+        return
+
+    needed = required - existing
+    injected = 0
+    for day_num in target_days:
+        if injected >= needed:
+            break
+        # Find that day (1-indexed) in the schedule
+        day = next((d for d in schedule if d.get("day") == day_num), None)
+        if not day:
+            continue
+        # Don't add a duplicate 646 on the same day
+        if any(s.get("code") == 646 for s in day.get("sessions", [])):
+            continue
+        day.setdefault("sessions", []).append({
+            "code": 646,
+            "name": "Health, Wellness & Rejuvenation",
+            "minutes": 90,
+            "instructions": "Enter: AUTO, 646, RUN",
+            "notes": CODE_646_NOTE,
+            "time_of_day": "evening",
+        })
+        injected += 1
+
+    # Fallback: if target_days weren't all in the schedule, append to the last available days.
+    if injected < needed:
+        for day in reversed(schedule):
+            if injected >= needed:
+                break
+            if any(s.get("code") == 646 for s in day.get("sessions", [])):
+                continue
+            day.setdefault("sessions", []).append({
+                "code": 646,
+                "name": "Health, Wellness & Rejuvenation",
+                "minutes": 90,
+                "instructions": "Enter: AUTO, 646, RUN",
+                "notes": CODE_646_NOTE,
+                "time_of_day": "evening",
+            })
+            injected += 1
 
 
 def _build_plan_html(plan: Dict[str, Any]) -> str:
