@@ -12,13 +12,13 @@ const HERO_IMG = "https://curawaves.com/cdn/shop/files/Product_image_WT_1020x693
 const FREEDOM_IMG = "https://curawaves.com/cdn/shop/products/ScreenShot2022-01-17at10.59.02PM_893x479.png?v=1642489164";
 
 const FREEDOM = [
-  { letter: "F", title: "Faith, Hope, Love", body: "Our bodies are divinely designed to heal naturally." },
-  { letter: "R", title: "Restoration", body: "Give your body what it needs (and doesn't) to release + restore." },
-  { letter: "E", title: "Electric Health", body: "Our cells need to be energized and rejuvenated." },
-  { letter: "E", title: "Emotional Balance", body: "Stress harms our health; balance restores it." },
-  { letter: "D", title: "Detoxification", body: "Feel the benefits of vitality by removing toxins." },
-  { letter: "O", title: "Oxygenation", body: "Create a rich oxygen environment for your cells." },
-  { letter: "M", title: "Mindfulness", body: "Studies show we can literally rewire our brains." },
+  { letter: "F", title: "Faith. Hope. Love.", body: "Our bodies are divinely designed to heal naturally. Grow your faith, hope and receive more love." },
+  { letter: "R", title: "Restoration", body: "For transformative results, give your body what it needs (and doesn't) to release + restore." },
+  { letter: "E", title: "Electric Health", body: "Our cells need to be energized and rejuvenated for cellular communication with Wave Therapy." },
+  { letter: "E", title: "Emotional Balance", body: "Stress harms our health, while laughter improves it. Find the balance." },
+  { letter: "D", title: "Detoxification", body: "Feel the benefits of more vitality and longevity by removing toxins." },
+  { letter: "O", title: "Oxygenation", body: "Create a richer oxygen environment for your cells with deep breathing." },
+  { letter: "M", title: "Mindfulness", body: "Studies show we can literally rewire our brains. Be intentional with your thoughts and words." },
 ];
 
 const TESTIMONIALS = [
@@ -46,8 +46,8 @@ export default function Landing() {
               Your personalized path to <em className="text-ocean not-italic font-medium">freedom from pain</em> and greater vitality.
             </h1>
             <p className="mt-6 text-lg text-ink-muted max-w-xl leading-relaxed">
-              Answer a short health questionnaire and we&apos;ll build a personalized 1-day, 1-week, or 30-day Wave Therapy program drawn from
-              500+ pre-programmed frequency codes — tailored to your goals.
+              Answer the Wave Therapy questionnaire for a free personalized plan to help you get started and feeling better each day.
+              The program draws from 500+ frequencies and 100+ pre-programmed codes — tailored to your unique goals.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
@@ -90,7 +90,7 @@ export default function Landing() {
         <div className="max-w-2xl mb-12">
           <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">Five Protocol Pathways</p>
           <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">
-            Five protocols. Hundreds of codes. One plan crafted around you.
+            Five protocols. Hundreds of waves. One plan crafted for you.
           </h2>
           <p className="mt-4 text-ink-muted">
             Your AI-generated program selects exact <span className="font-mono text-ocean">AUTO &gt; Code &gt; RUN</span> sessions from the official Wave Therapy catalog.
@@ -140,14 +140,19 @@ export default function Landing() {
             </p>
             <img src={FREEDOM_IMG} alt="FREEDOM method" className="mt-6 w-full rounded-2xl border border-[#EAE5D9]" />
           </div>
-          <div className="md:col-span-7 grid sm:grid-cols-2 gap-4">
+          <div className="md:col-span-7 flex flex-col gap-3">
             {FREEDOM.map((f, i) => (
-              <div key={i} className="bg-white border border-[#EAE5D9] rounded-xl p-5 hover:border-ocean/40 transition-colors">
-                <div className="flex items-baseline gap-3">
-                  <span className="font-serif text-3xl text-ocean">{f.letter}</span>
-                  <span className="text-sm font-semibold text-ink">{f.title}</span>
+              <div
+                key={i}
+                className="bg-white border border-[#EAE5D9] rounded-xl p-5 md:p-6 flex items-start gap-5 hover:border-ocean/40 hover:shadow-sm transition-all"
+              >
+                <span className="font-serif text-5xl md:text-6xl text-ocean leading-none shrink-0 w-12 md:w-14 text-center">
+                  {f.letter}
+                </span>
+                <div className="flex-1 pt-1">
+                  <div className="text-base font-semibold text-ink">{f.title}</div>
+                  <p className="text-sm text-ink-muted mt-1.5 leading-relaxed">{f.body}</p>
                 </div>
-                <p className="text-sm text-ink-muted mt-2 leading-relaxed">{f.body}</p>
               </div>
             ))}
           </div>
@@ -157,8 +162,8 @@ export default function Landing() {
       {/* How it works */}
       <section className="max-w-7xl mx-auto px-6 py-20 md:py-24">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">How your plan runs</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">Three keystrokes. Built-in pause.</h2>
+          <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">How your plan works</p>
+          <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">Easy to Use. Flexible Options.</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {[

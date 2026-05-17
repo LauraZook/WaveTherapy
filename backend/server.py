@@ -185,30 +185,35 @@ INSTRUCTIONS:
         system_message=system_msg,
     ).with_model("anthropic", "claude-sonnet-4-5-20250929")
 
-    msg = UserMessage(text=user_prompt)
-    response = await chat.send_message(msg)
-    text = response.strip()
+    async def _ask(prompt_text: str) -> str:
+        return await chat.send_message(UserMessage(text=prompt_text))
 
-    # Strip markdown fences if any
-    if text.startswith("```"):
-        text = text.strip("`")
-        if text.startswith("json"):
-            text = text[4:]
+    def _extract_json(text: str):
         text = text.strip()
+        if text.startswith("```"):
+            text = text.strip("`")
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
+        first = text.find("{")
+        last = text.rfind("}")
+        if first != -1 and last != -1:
+            text = text[first : last + 1]
+        return json.loads(text)
 
-    # Find first { and last }
-    first = text.find("{")
-    last = text.rfind("}")
-    if first != -1 and last != -1:
-        text = text[first : last + 1]
-
+    response = await _ask(user_prompt)
     try:
-        data = json.loads(text)
-    except json.JSONDecodeError as e:
-        logger.error(f"LLM JSON parse failed: {e}\nRaw: {text[:500]}")
-        raise HTTPException(status_code=502, detail="Failed to parse plan from AI. Please try again.")
-
-    return data
+        return _extract_json(response)
+    except json.JSONDecodeError:
+        # One retry asking for strict JSON-only output
+        logger.warning("LLM returned non-JSON. Retrying with stricter prompt.")
+        retry_prompt = "Return ONLY the JSON object from your previous answer. No prose, no markdown fences. Start with { and end with }."
+        response2 = await _ask(retry_prompt)
+        try:
+            return _extract_json(response2)
+        except json.JSONDecodeError as e:
+            logger.error(f"LLM JSON parse failed after retry: {e}\nRaw: {response2[:500]}")
+            raise HTTPException(status_code=502, detail="Failed to parse plan from AI. Please try again.")
 
 
 def _build_plan_html(plan: Dict[str, Any]) -> str:

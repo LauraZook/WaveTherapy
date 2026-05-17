@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Waves } from "lucide-react";
+
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_therapy-goal-planner/artifacts/iu32proz_curawaves_logo_bk.png";
 
 export const Navbar = () => {
   const { pathname } = useLocation();
@@ -8,14 +9,15 @@ export const Navbar = () => {
   return (
     <header className="bg-[#FDFBF7] border-b border-[#EAE5D9]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 group" data-testid="nav-logo">
-          <span className="w-9 h-9 rounded-full bg-ocean text-white flex items-center justify-center group-hover:bg-ocean-dark transition-colors">
-            <Waves className="w-5 h-5" />
+        <Link to="/" className="flex items-center gap-3 group" data-testid="nav-logo">
+          <img
+            src={LOGO_URL}
+            alt="CuraWaves"
+            className="h-9 md:h-10 w-auto object-contain"
+          />
+          <span className="hidden sm:inline-block text-[10px] tracking-[0.2em] uppercase text-ink-muted border-l border-[#EAE5D9] pl-3">
+            Wave Therapy Onboarding
           </span>
-          <div>
-            <div className="font-serif text-2xl text-ink leading-none">CuraWaves</div>
-            <div className="text-[10px] tracking-[0.2em] uppercase text-ink-muted mt-0.5">Wave Therapy Onboarding</div>
-          </div>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-ink-muted">
           <Link to="/" data-testid="nav-home" className={isActive("/") ? "text-ocean" : "hover:text-ocean transition-colors"}>Home</Link>
