@@ -28,7 +28,7 @@ export default function Onboarding() {
     first_name: "",
     email: "",
     age: 35,
-    sex: "prefer_not_to_say",
+    sex: "",
     primary_goal: "",
     symptoms: [],
     symptom_details: "",
@@ -117,8 +117,8 @@ export default function Onboarding() {
           {/* Step 0 */}
           {step === 0 && (
             <div className="space-y-5">
-              <h2 className="font-serif text-3xl text-ink mb-1">Let&apos;s get to know you</h2>
-              <p className="text-ink-muted text-sm">We&apos;ll only use this to personalize your plan.</p>
+              <h2 className="font-serif text-3xl text-ink mb-1">Let&apos;s get to know your goals</h2>
+              <p className="text-ink-muted text-sm">We&apos;ll only use this info to personalize your Wave Therapy plan and deliver to you.</p>
               <div className="grid sm:grid-cols-2 gap-4 pt-2">
                 <label className="block">
                   <span className="text-xs uppercase tracking-wider text-ink-muted">First name</span>
@@ -160,6 +160,7 @@ export default function Onboarding() {
                     value={form.sex}
                     onChange={(e) => setF("sex", e.target.value)}
                   >
+                    <option value="" disabled>Select option</option>
                     <option value="female">Female</option>
                     <option value="male">Male</option>
                     <option value="other">Other</option>
