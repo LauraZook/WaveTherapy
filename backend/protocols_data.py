@@ -72,7 +72,7 @@ PROTOCOLS = {
             {"code": 377, "name": "Lymph Stasis (Lymphatic Drainage)", "minutes": 33, "targets": "lymph drainage, light off-day session"},
             {"code": 367, "name": "Hypothalamus Cleanse", "minutes": 12, "targets": "hormonal balance, hypothalamus detox; every 2nd day x 6"},
             {"code": 374, "name": "Lungs Cleanse & Rejuvenation", "minutes": 45, "targets": "lung cleanse, respiratory detox"},
-            {"code": 161, "name": "Cellular Cleanse & Restoration", "minutes": 60, "targets": "cellular-level cleanse and restoration"},
+            {"code": 161, "name": "Cellular Cleanse & Restoration (Single-Channel)", "minutes": 30, "targets": "cellular-level cleanse and restoration — SINGLE-CHANNEL keystroke: 'Press: 30, SELECT, 161, RUN'. Great WEEKLY solo session for ANY goal (meditation, health, pain, detox, repair, immunity)"},
         ],
     },
     "immune_boost": {

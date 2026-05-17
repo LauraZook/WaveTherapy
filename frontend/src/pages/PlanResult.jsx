@@ -70,13 +70,19 @@ export default function PlanResult() {
     const sessionsHTML = plan.schedule.map((d) => `
       <h3 style="font-family:Georgia,serif;color:#2C5E7A;margin:18px 0 6px;font-weight:500;">${d.label}</h3>
       <table width="100%" cellspacing="0" style="border-collapse:collapse;font-size:14px;color:#2A3439;">
-        ${d.sessions.map((s) => `
+        ${d.sessions.map((s) => {
+          const keystrokes = s.code === 444
+            ? `7 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b style="color:#2C5E7A">444</b> &nbsp;|&nbsp; RUN`
+            : s.code === 161
+            ? `30 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b style="color:#2C5E7A">161</b> &nbsp;|&nbsp; RUN`
+            : `AUTO &nbsp;|&nbsp; <b style="color:#2C5E7A">${s.code}</b> &nbsp;|&nbsp; RUN`;
+          return `
           <tr>
-            <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;font-family:monospace;width:32%;">AUTO &nbsp;|&nbsp; <b style="color:#2C5E7A">${s.code}</b> &nbsp;|&nbsp; RUN</td>
+            <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;font-family:monospace;width:36%;">${keystrokes}</td>
             <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;">${s.name}${s.time_of_day ? ` <span style="font-size:10px;background:#E9F1F5;color:#2C5E7A;padding:2px 8px;border-radius:12px;margin-left:6px;">${s.time_of_day.replace("_"," ")}</span>` : ""}</td>
             <td style="padding:8px 10px;border-bottom:1px solid #EAE5D9;text-align:right;width:80px;">${s.minutes} min</td>
           </tr>
-        `).join("")}
+        `;}).join("")}
       </table>
     `).join("");
 

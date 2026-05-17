@@ -171,7 +171,13 @@ INSTRUCTIONS:
    - one_week → 7 days, 1–3 sessions per day, vary daily
    - thirty_day → 30 days. You may compress by labeling repeating weekly patterns but produce all 30 days.
 2. Each session must be one entry from the catalog. Use exact code + name + minutes.
-3. Each session instructions string MUST be exactly: "Enter: AUTO, <CODE>, RUN"
+3. Each session instructions string MUST follow this format:
+   - DEFAULT (most codes — AUTO programs): `"Enter: AUTO, <CODE>, RUN"`
+   - **Code 444 (Pineal — single channel)**: instructions MUST be exactly `"Press: 7, SELECT, 444, RUN"`
+   - **Code 161 (Cellular Cleanse — single channel)**: instructions MUST be exactly `"Press: 30, SELECT, 161, RUN"`
+3a. **Cross-protocol go-to sessions** — feel free to include these in ANY plan (regardless of primary_goal) as an occasional weekly support:
+   - **Code 161 (Cellular Cleanse)** — a great WEEKLY solo session; include it once per week for meditation, health & wellness, pain, detoxification, repair & recovery, AND immune boost programs. Always 30 minutes.
+   - **Code 646 (Health, Wellness & Rejuvenation)** — a WEEKLY 90-MINUTE umbrella session, EVENING only. Schedule ONCE PER WEEK (not nightly). MUST use full 90 minutes — do NOT shorten. Skip it on 1-day plans unless the user has plenty of time.
 4. **MINUTES BUDGET**: Total session minutes per day SHOULD stay near {minutes_budget} minutes. Pick fewer/shorter codes if needed to fit. **HARD CEILING: NEVER schedule more than 180 minutes (3 hours) of sessions in a single day** — for typical daily practice, 60–90 minutes is sufficient. If user picked "as_recommended", target ~90 minutes.
 5. **TIME-OF-DAY RULES** (set the time_of_day field on each session):
    - User's preferred slots: {times_text}.
@@ -265,30 +271,72 @@ INSTRUCTIONS:
 
     response = await _ask(conversation)
     try:
-        return _extract_json(response)
+        data = _extract_json(response)
     except json.JSONDecodeError:
         logger.warning("LLM returned non-JSON. Retrying with stricter prompt.")
         conversation.append({"role": "assistant", "content": response})
         conversation.append({"role": "user", "content": "Return ONLY the JSON object from your previous answer. No prose, no markdown fences. Start with { and end with }."})
         response2 = await _ask(conversation)
         try:
-            return _extract_json(response2)
+            data = _extract_json(response2)
         except json.JSONDecodeError as e:
             logger.error(f"LLM JSON parse failed after retry: {e}\nRaw: {response2[:500]}")
             raise HTTPException(status_code=502, detail="Failed to parse plan from AI. Please try again.")
+
+    _normalize_schedule(data)
+    return data
+
+
+# Deterministic overrides for codes with special keystroke sequences or fixed durations.
+# Applied AFTER the LLM responds so we don't depend on the model getting every detail right.
+SPECIAL_CODE_OVERRIDES = {
+    444: {"instructions": "Press: 7, SELECT, 444, RUN", "minutes": 10, "max_per_week": 4},  # every other day
+    161: {"instructions": "Press: 30, SELECT, 161, RUN", "minutes": 30, "max_per_week": 1},  # weekly
+    646: {"instructions": "Enter: AUTO, 646, RUN", "minutes": 90, "max_per_week": 1},  # weekly evening umbrella
+}
+
+
+def _normalize_schedule(data: Dict[str, Any]) -> None:
+    """Mutates data['schedule'] in-place to enforce special-code rules."""
+    schedule = data.get("schedule") or []
+    code_counts: Dict[int, int] = {}
+    for day in schedule:
+        kept_sessions = []
+        for s in day.get("sessions", []):
+            code = s.get("code")
+            override = SPECIAL_CODE_OVERRIDES.get(code)
+            if override:
+                # Enforce frequency cap across the whole plan window
+                used = code_counts.get(code, 0)
+                if used >= override["max_per_week"]:
+                    # Skip this duplicate occurrence
+                    continue
+                code_counts[code] = used + 1
+                s["instructions"] = override["instructions"]
+                s["minutes"] = override["minutes"]
+            kept_sessions.append(s)
+        day["sessions"] = kept_sessions
 
 
 def _build_plan_html(plan: Dict[str, Any]) -> str:
     """Build a print-friendly HTML email with the plan."""
     schedule_rows = []
     for d in plan["schedule"]:
-        sessions_html = "".join(
-            f"<tr><td style='padding:6px 10px;border-bottom:1px solid #EAE5D9;font-family:monospace;'>"
-            f"AUTO &nbsp;|&nbsp; <b>{s['code']}</b> &nbsp;|&nbsp; RUN</td>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #EAE5D9;'>{s['name']}</td>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #EAE5D9;text-align:right;'>{s['minutes']} min</td></tr>"
-            for s in d["sessions"]
-        )
+        sess_html_rows = []
+        for s in d["sessions"]:
+            code = s["code"]
+            if code == 444:
+                keystrokes = "7 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b>444</b> &nbsp;|&nbsp; RUN"
+            elif code == 161:
+                keystrokes = "30 &nbsp;|&nbsp; SELECT &nbsp;|&nbsp; <b>161</b> &nbsp;|&nbsp; RUN"
+            else:
+                keystrokes = f"AUTO &nbsp;|&nbsp; <b>{code}</b> &nbsp;|&nbsp; RUN"
+            sess_html_rows.append(
+                f"<tr><td style='padding:6px 10px;border-bottom:1px solid #EAE5D9;font-family:monospace;'>{keystrokes}</td>"
+                f"<td style='padding:6px 10px;border-bottom:1px solid #EAE5D9;'>{s['name']}</td>"
+                f"<td style='padding:6px 10px;border-bottom:1px solid #EAE5D9;text-align:right;'>{s['minutes']} min</td></tr>"
+            )
+        sessions_html = "".join(sess_html_rows)
         schedule_rows.append(
             f"<h3 style='font-family:Georgia,serif;color:#2C5E7A;margin:18px 0 6px;'>{d['label']}</h3>"
             f"<table width='100%' cellspacing='0' style='border-collapse:collapse;font-size:14px;color:#2A3439;'>{sessions_html}</table>"
