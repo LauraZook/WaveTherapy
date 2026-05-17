@@ -34,10 +34,19 @@ export default function PlanResult() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!id || id === "undefined") {
+      setLoading(false);
+      return () => { cancelled = true; };
+    }
     (async () => {
       try {
         const { data } = await api.get(`/plan/${id}`);
-        if (!cancelled) setPlan(data);
+        if (cancelled) return;
+        if (!data || !data.id) {
+          toast.error("Plan not found.");
+        } else {
+          setPlan(data);
+        }
       } catch (e) {
         if (!cancelled) toast.error("Plan not found.");
       } finally {
@@ -235,8 +244,8 @@ export default function PlanResult() {
               <div className="text-sm text-ink-muted mt-1">Prepared for {plan.first_name}</div>
             </div>
             <div className="text-right text-xs text-ink-muted">
-              <div>Plan ID: <span className="font-mono text-ink">{plan.id.slice(0, 8)}</span></div>
-              <div className="mt-1">Created {new Date(plan.created_at).toLocaleDateString()}</div>
+              <div>Plan ID: <span className="font-mono text-ink">{plan.id ? plan.id.slice(0, 8) : "—"}</span></div>
+              <div className="mt-1">Created {plan.created_at ? new Date(plan.created_at).toLocaleDateString() : "—"}</div>
             </div>
           </div>
 
@@ -257,7 +266,9 @@ export default function PlanResult() {
 
           {/* Schedule */}
           <div className="mt-8" data-testid="plan-schedule">
-            {view === "grid" ? (
+            {!plan.schedule || plan.schedule.length === 0 ? (
+              <p className="text-sm text-ink-muted italic">Your schedule is being prepared — please refresh this page in a moment.</p>
+            ) : view === "grid" ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" data-testid="plan-grid">
                 {plan.schedule.map((d) => (
                   <div key={d.day} className="bg-white border border-[#EAE5D9] rounded-xl p-3 hover:border-ocean/40 transition-colors">

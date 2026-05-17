@@ -98,10 +98,20 @@ export default function Onboarding() {
     setSubmitting(true);
     try {
       const { data } = await api.post("/questionnaire/submit", form);
+      if (!data || !data.id) {
+        toast.error("Plan generated but the response was incomplete. Please refresh and try again.");
+        return;
+      }
       toast.success("Your personalized program is ready.");
       navigate(`/plan/${data.id}`);
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Could not generate plan. Please try again.");
+      const status = e?.response?.status;
+      const detail = e?.response?.data?.detail;
+      if (status === 504 || e?.code === "ECONNABORTED" || (e?.message || "").toLowerCase().includes("network")) {
+        toast.error("The plan is taking longer than expected. Please check your email in a minute — if your plan arrives, you can also reload this page.");
+      } else {
+        toast.error(detail || "Could not generate plan. Please try again.");
+      }
     } finally {
       clearInterval(interval);
       setLoadingMsg("");

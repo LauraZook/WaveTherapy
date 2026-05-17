@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Header, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Header, BackgroundTasks, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -410,7 +410,9 @@ async def root():
 
 
 @api_router.get("/protocols")
-async def list_protocols():
+async def list_protocols(response: Response):
+    # Static catalog — safe to cache aggressively at the edge / browser.
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400"
     return {"protocols": get_all_protocols_summary()}
 
 
@@ -606,6 +608,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def ensure_indexes():
+    """Create MongoDB indexes if they don't already exist. Idempotent."""
+    try:
+        await db.plans.create_index("id", unique=True)
+        await db.plans.create_index("email")
+        await db.plans.create_index("created_at")
+        await db.plans.create_index("reminder_due_at")
+        logger.info("MongoDB indexes ensured on plans collection.")
+    except Exception as e:
+        logger.warning(f"Index creation skipped: {e}")
 
 
 @app.on_event("shutdown")
