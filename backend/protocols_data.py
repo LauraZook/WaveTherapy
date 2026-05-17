@@ -17,7 +17,7 @@ PROTOCOLS = {
             {"code": 646, "name": "Health, Wellness & Rejuvenation", "minutes": 30, "targets": "general vitality, cellular regeneration — NOTE: slightly drowsy; recommend EVENING only"},
             {"code": 647, "name": "General Health & Wellness (Earth Resonance)", "minutes": 30, "targets": "stress, EMF neutralization, sleep deprivation, immune support — safe to run while sleeping (evening)"},
             {"code": 222, "name": "DNA Healing & Cellular Rejuvenation (Energizing)", "minutes": 4, "targets": "DNA repair, cellular rejuvenation — ENERGIZING, recommend MORNING; every 3rd day x 40 sessions"},
-            {"code": 444, "name": "Pineal Gland & Cortex Rejuvenation (Energizing)", "minutes": 10, "targets": "mental clarity, third eye, brain support — ENERGIZING, recommend MORNING; daily x 40 days"},
+            {"code": 444, "name": "Pineal Gland & Cortex Rejuvenation (Energizing)", "minutes": 10, "targets": "mental clarity, third eye, brain support — ENERGIZING, recommend MORNING; run EVERY OTHER DAY only (not daily) x 40 days"},
             {"code": 636, "name": "Mental Clarity (Energizing)", "minutes": 45, "targets": "focus, mental sharpness, brain fog — ENERGIZING, recommend MORNING or during_work"},
             {"code": 638, "name": "Memory", "minutes": 27, "targets": "memory, cognitive recall — morning preferred"},
             {"code": 351, "name": "Insomnia / Healthy Sleep", "minutes": 24, "targets": "sleep onset, insomnia — EVENING only"},

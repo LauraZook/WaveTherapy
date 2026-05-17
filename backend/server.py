@@ -135,7 +135,7 @@ async def _generate_plan_with_llm(sub: QuestionnaireSubmission) -> Dict[str, Any
     )
 
     catalog = build_llm_context()
-    minutes_budget = {"thirty": 30, "sixty": 60, "as_recommended": 999}.get(sub.minutes_per_day, 999)
+    minutes_budget = {"thirty": 30, "sixty": 60, "as_recommended": 90}.get(sub.minutes_per_day, 90)
     times_text = ", ".join(sub.preferred_times) if sub.preferred_times else "anytime (no preference)"
 
     user_prompt = f"""
@@ -155,7 +155,7 @@ USER PROFILE:
 - Pregnancy/pacemaker (safety flag): {sub.pregnancy_or_pacemaker}
 - Lifestyle notes: {sub.lifestyle_notes or "(none)"}
 - Requested program length: {sub.program_length}  (one_day = 1 day, one_week = 7 days, thirty_day = 30 days)
-- Time available per day: {sub.minutes_per_day}  (target total minutes per day: {minutes_budget if minutes_budget < 999 else "no limit — follow recommended"})
+- Time available per day: {sub.minutes_per_day}  (target total minutes per day: ~{minutes_budget} min, hard ceiling 180 min)
 - Preferred time(s) of day: {times_text}
 
 CATALOG OF AVAILABLE CODES (pick ONLY from these):
@@ -168,7 +168,7 @@ INSTRUCTIONS:
    - thirty_day → 30 days. You may compress by labeling repeating weekly patterns but produce all 30 days.
 2. Each session must be one entry from the catalog. Use exact code + name + minutes.
 3. Each session instructions string MUST be exactly: "Enter: AUTO, <CODE>, RUN"
-4. **MINUTES BUDGET**: Total session minutes per day SHOULD stay near {minutes_budget if minutes_budget < 999 else "the recommended length per code"} minutes. Pick fewer/shorter codes if needed to fit. Never go more than +15 minutes over.
+4. **MINUTES BUDGET**: Total session minutes per day SHOULD stay near {minutes_budget} minutes. Pick fewer/shorter codes if needed to fit. **HARD CEILING: NEVER schedule more than 180 minutes (3 hours) of sessions in a single day** — for typical daily practice, 60–90 minutes is sufficient. If user picked "as_recommended", target ~90 minutes.
 5. **TIME-OF-DAY RULES** (set the time_of_day field on each session):
    - User's preferred slots: {times_text}.
    - Energizing codes (DNA Healing 222, Pineal/Cortex 444, Mental Clarity 636) MUST be scheduled in the MORNING.
@@ -176,6 +176,7 @@ INSTRUCTIONS:
    - Code 646 (Health, Wellness & Rejuvenation) is SLIGHTLY DROWSY — schedule it in the EVENING only.
    - Code 647 (Earth Resonance) is safe to run while sleeping → evening.
    - Insomnia 351 → evening.
+   - **Code 444 (Pineal) must NEVER be run on consecutive days — schedule it EVERY OTHER DAY at most (Days 1, 3, 5, …).**
    - If user picked specific slots, only use those slots. If none picked, distribute sensibly.
 6. **PAIN RULES** (if primary_goal == pain_inflammation):
    - If pain_location is empty OR mentions "all over"/"full body"/"chronic"/"fibromyalgia" → recommend code 274 (Fibromyalgia Pain & Inflammation) DAILY as the anchor session.
