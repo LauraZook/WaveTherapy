@@ -13,7 +13,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
 
 import resend
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+import anthropic
 
 from protocols_data import PROTOCOLS, get_all_protocols_summary, build_llm_context
 
@@ -32,7 +32,11 @@ if RESEND_API_KEY and not RESEND_API_KEY.startswith("re_placeholder"):
     resend.api_key = RESEND_API_KEY
 
 # ---- LLM ----
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+# In production (Railway/Vercel) set ANTHROPIC_API_KEY (sk-ant-...).
+# EMERGENT_LLM_KEY is kept for backward compatibility with the Emergent dev environment.
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("EMERGENT_LLM_KEY", "")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
+anthropic_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
 
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "curawaves-admin-2026")
 
@@ -221,14 +225,30 @@ INSTRUCTIONS:
 }}
 """
 
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
-        session_id=f"plan-{uuid.uuid4()}",
-        system_message=system_msg,
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    if not anthropic_client:
+        raise HTTPException(
+            status_code=503,
+            detail="LLM is not configured. Set ANTHROPIC_API_KEY (sk-ant-...) in the backend environment.",
+        )
 
-    async def _ask(prompt_text: str) -> str:
-        return await chat.send_message(UserMessage(text=prompt_text))
+    conversation: List[Dict[str, str]] = [{"role": "user", "content": user_prompt}]
+
+    async def _ask(messages: List[Dict[str, str]]) -> str:
+        try:
+            resp = await anthropic_client.messages.create(
+                model=ANTHROPIC_MODEL,
+                max_tokens=8000,
+                system=system_msg,
+                messages=messages,
+            )
+            return resp.content[0].text
+        except anthropic.AuthenticationError:
+            raise HTTPException(
+                status_code=503,
+                detail="LLM authentication failed. Check ANTHROPIC_API_KEY is a valid sk-ant-... key.",
+            )
+        except anthropic.APIError as e:
+            raise HTTPException(status_code=502, detail=f"LLM error: {e.message if hasattr(e, 'message') else str(e)}")
 
     def _extract_json(text: str):
         text = text.strip()
@@ -243,14 +263,14 @@ INSTRUCTIONS:
             text = text[first : last + 1]
         return json.loads(text)
 
-    response = await _ask(user_prompt)
+    response = await _ask(conversation)
     try:
         return _extract_json(response)
     except json.JSONDecodeError:
-        # One retry asking for strict JSON-only output
         logger.warning("LLM returned non-JSON. Retrying with stricter prompt.")
-        retry_prompt = "Return ONLY the JSON object from your previous answer. No prose, no markdown fences. Start with { and end with }."
-        response2 = await _ask(retry_prompt)
+        conversation.append({"role": "assistant", "content": response})
+        conversation.append({"role": "user", "content": "Return ONLY the JSON object from your previous answer. No prose, no markdown fences. Start with { and end with }."})
+        response2 = await _ask(conversation)
         try:
             return _extract_json(response2)
         except json.JSONDecodeError as e:
