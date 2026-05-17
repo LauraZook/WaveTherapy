@@ -38,12 +38,17 @@ export default function PlanResult() {
       try {
         const { data } = await api.get(`/plan/${id}`);
         if (!cancelled) setPlan(data);
-        const notesRes = await api.get(`/plan/${id}/notes`);
-        if (!cancelled) setNotes(notesRes.data.notes || "");
       } catch (e) {
-        toast.error("Plan not found.");
+        if (!cancelled) toast.error("Plan not found.");
       } finally {
         if (!cancelled) setLoading(false);
+      }
+      // Notes are optional — failing here shouldn't surface an error
+      try {
+        const notesRes = await api.get(`/plan/${id}/notes`);
+        if (!cancelled) setNotes(notesRes.data.notes || "");
+      } catch (_e) {
+        // ignore — empty notes is the default state
       }
     })();
     return () => { cancelled = true; };
