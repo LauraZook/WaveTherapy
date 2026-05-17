@@ -239,17 +239,33 @@ INSTRUCTIONS:
             detail="LLM is not configured. Set ANTHROPIC_API_KEY (sk-ant-...) in the backend environment.",
         )
 
-    conversation: List[Dict[str, str]] = [{"role": "user", "content": user_prompt}]
+    # Prefill trick: starting the assistant's response with `{` forces Claude into JSON mode
+    # without any prose preamble. We re-prepend `{` to the returned text before parsing.
+    conversation: List[Dict[str, str]] = [
+        {"role": "user", "content": user_prompt},
+        {"role": "assistant", "content": "{"},
+    ]
+
+    # Token budget per program length. 30-day plans need significantly more output room
+    # to fit all 30 days of sessions inside the JSON without truncating mid-object.
+    max_tokens = {"one_day": 4000, "one_week": 8000, "thirty_day": 20000}.get(sub.program_length, 8000)
 
     async def _ask(messages: List[Dict[str, str]]) -> str:
         try:
             resp = await anthropic_client.messages.create(
                 model=ANTHROPIC_MODEL,
-                max_tokens=8000,
+                max_tokens=max_tokens,
                 system=system_msg,
                 messages=messages,
             )
-            return resp.content[0].text
+            text = resp.content[0].text
+            stop = getattr(resp, "stop_reason", None)
+            if stop == "max_tokens":
+                logger.warning(
+                    f"LLM hit max_tokens={max_tokens} for program_length={sub.program_length}. "
+                    f"Response length={len(text)} — likely truncated."
+                )
+            return text
         except anthropic.AuthenticationError:
             raise HTTPException(
                 status_code=503,
@@ -272,17 +288,34 @@ INSTRUCTIONS:
         return json.loads(text)
 
     response = await _ask(conversation)
+    # Re-prepend the prefill `{` so the response is valid JSON from the start.
+    if not response.lstrip().startswith("{"):
+        response = "{" + response
     try:
         data = _extract_json(response)
-    except json.JSONDecodeError:
-        logger.warning("LLM returned non-JSON. Retrying with stricter prompt.")
-        conversation.append({"role": "assistant", "content": response})
-        conversation.append({"role": "user", "content": "Return ONLY the JSON object from your previous answer. No prose, no markdown fences. Start with { and end with }."})
-        response2 = await _ask(conversation)
+    except json.JSONDecodeError as e1:
+        logger.warning(
+            f"LLM returned non-JSON on first attempt: {e1}. "
+            f"Raw tail (last 400 chars): {response[-400:]!r}"
+        )
+        # Retry: ask Claude to repair / re-emit JSON only, again with prefill.
+        retry_conv: List[Dict[str, str]] = [
+            {"role": "user", "content": user_prompt},
+            {"role": "assistant", "content": response},
+            {"role": "user", "content": "Your previous response was truncated or not valid JSON. Re-emit ONLY the complete JSON object — no prose, no markdown fences. Start with { and end with }. Keep the schedule complete."},
+            {"role": "assistant", "content": "{"},
+        ]
+        response2 = await _ask(retry_conv)
+        if not response2.lstrip().startswith("{"):
+            response2 = "{" + response2
         try:
             data = _extract_json(response2)
-        except json.JSONDecodeError as e:
-            logger.error(f"LLM JSON parse failed after retry: {e}\nRaw: {response2[:500]}")
+        except json.JSONDecodeError as e2:
+            logger.error(
+                f"LLM JSON parse failed after retry: {e2}\n"
+                f"First raw tail: {response[-400:]!r}\n"
+                f"Retry raw tail: {response2[-400:]!r}"
+            )
             raise HTTPException(status_code=502, detail="Failed to parse plan from AI. Please try again.")
 
     _normalize_schedule(data)
