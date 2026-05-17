@@ -18,7 +18,7 @@ const SYMPTOMS = [
   "Sinus / congestion", "Skin issues", "Recovery from injury", "Post-surgery", "Other",
 ];
 
-const STEPS = ["About you", "Your goal", "Symptoms", "Health flags", "Program length", "Review"];
+const STEPS = ["About you", "Your goal", "Symptoms", "Schedule", "Health flags", "Program length", "Review"];
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -34,6 +34,9 @@ export default function Onboarding() {
     symptom_details: "",
     severity: 5,
     duration: "months",
+    pain_location: "",
+    minutes_per_day: "as_recommended",
+    preferred_times: [],
     has_autoimmune: false,
     autoimmune_details: "",
     medications: "",
@@ -49,14 +52,22 @@ export default function Onboarding() {
       ...p,
       symptoms: p.symptoms.includes(s) ? p.symptoms.filter((x) => x !== s) : [...p.symptoms, s],
     }));
+  const toggleTime = (t) =>
+    setForm((p) => ({
+      ...p,
+      preferred_times: p.preferred_times.includes(t)
+        ? p.preferred_times.filter((x) => x !== t)
+        : [...p.preferred_times, t],
+    }));
 
   const canNext = () => {
     if (step === 0) return form.first_name.trim() && form.email.trim() && form.age > 0;
     if (step === 1) return !!form.primary_goal;
     if (step === 2) return true;
-    if (step === 3) return true;
-    if (step === 4) return !!form.program_length;
-    if (step === 5) return form.consent_disclaimer;
+    if (step === 3) return !!form.minutes_per_day;  // schedule
+    if (step === 4) return true;  // health flags
+    if (step === 5) return !!form.program_length;
+    if (step === 6) return form.consent_disclaimer;
     return false;
   };
 
@@ -224,6 +235,21 @@ export default function Onboarding() {
                   placeholder="e.g. lower back pain after long drives, started 6 months ago"
                 />
               </label>
+              {form.primary_goal === "pain_inflammation" && (
+                <label className="block pt-1">
+                  <span className="text-xs uppercase tracking-wider text-ink-muted">Where is the pain? (optional)</span>
+                  <input
+                    data-testid="input-pain-location"
+                    className="mt-1 w-full bg-cream border border-sand-300 rounded-lg px-4 py-3 focus:border-ocean focus:ring-2 focus:ring-ocean/20 outline-none"
+                    value={form.pain_location}
+                    onChange={(e) => setF("pain_location", e.target.value)}
+                    placeholder="e.g. wrists (carpal tunnel), elbow (tendonitis), lower back, knees — or leave blank for full-body"
+                  />
+                  <span className="text-xs text-ink-muted mt-1 block">
+                    Localized pain gets targeted codes alternated with arthritis codes. Full-body/chronic → daily fibromyalgia code 274.
+                  </span>
+                </label>
+              )}
               <div className="grid sm:grid-cols-2 gap-4 pt-2">
                 <label className="block">
                   <span className="text-xs uppercase tracking-wider text-ink-muted">Severity: <span className="text-ocean font-semibold">{form.severity}/10</span></span>
@@ -253,8 +279,71 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3 — Schedule */}
           {step === 3 && (
+            <div className="space-y-5">
+              <h2 className="font-serif text-3xl text-ink mb-1">Your schedule</h2>
+              <p className="text-ink-muted text-sm">We&apos;ll match session timing to your day so you actually use it.</p>
+
+              <div className="pt-2">
+                <span className="text-xs uppercase tracking-wider text-ink-muted">Time available per day</span>
+                <div className="mt-2 grid sm:grid-cols-3 gap-3">
+                  {[
+                    { key: "thirty", label: "30 min", desc: "Quick daily session" },
+                    { key: "sixty", label: "60 min", desc: "Solid daily commitment" },
+                    { key: "as_recommended", label: "As recommended", desc: "Follow the protocol fully" },
+                  ].map(({ key, label, desc }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      data-testid={`minutes-${key}`}
+                      onClick={() => setF("minutes_per_day", key)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        form.minutes_per_day === key
+                          ? "border-ocean bg-ocean-light/40"
+                          : "border-[#EAE5D9] hover:border-ocean/40 bg-white"
+                      }`}
+                    >
+                      <div className="font-serif text-xl text-ink">{label}</div>
+                      <div className="text-xs text-ink-muted mt-1">{desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <span className="text-xs uppercase tracking-wider text-ink-muted">When can you run sessions? (pick any)</span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[
+                    { key: "morning", label: "Morning" },
+                    { key: "during_work", label: "During work" },
+                    { key: "afternoon", label: "Afternoon" },
+                    { key: "evening", label: "Evening" },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      data-testid={`time-${key}`}
+                      onClick={() => toggleTime(key)}
+                      className={`px-4 py-2 rounded-full text-sm border transition-colors ${
+                        form.preferred_times.includes(key)
+                          ? "bg-ocean text-white border-ocean"
+                          : "bg-white text-ink-muted border-[#EAE5D9] hover:border-ocean/40"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs text-ink-muted mt-2 block">
+                  Energizing codes (DNA, brain) are scheduled in the morning. Drowsy codes like Health & Wellness 646 are placed in the evening.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4 — Health flags */}
+          {step === 4 && (
             <div className="space-y-5">
               <h2 className="font-serif text-3xl text-ink mb-1">Health flags</h2>
               <p className="text-ink-muted text-sm">A couple of safety questions so we can recommend appropriately.</p>
@@ -316,8 +405,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 4 */}
-          {step === 4 && (
+          {/* Step 5 — Program length */}
+          {step === 5 && (
             <div className="space-y-5">
               <h2 className="font-serif text-3xl text-ink mb-1">Choose a program length</h2>
               <p className="text-ink-muted text-sm">Start small or commit to 30 days for deeper, lasting change.</p>
@@ -351,8 +440,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 5 */}
-          {step === 5 && (
+          {/* Step 6 — Review */}
+          {step === 6 && (
             <div className="space-y-5">
               <h2 className="font-serif text-3xl text-ink mb-1">Review &amp; consent</h2>
               <p className="text-ink-muted text-sm">A quick check before we generate your personalized program.</p>
@@ -361,7 +450,10 @@ export default function Onboarding() {
                 <div><span className="text-ink-muted">Email:</span> <span className="text-ink font-medium">{form.email || "—"}</span></div>
                 <div><span className="text-ink-muted">Primary goal:</span> <span className="text-ink font-medium">{GOALS.find(g => g.key === form.primary_goal)?.label || "—"}</span></div>
                 <div><span className="text-ink-muted">Symptoms:</span> <span className="text-ink font-medium">{form.symptoms.length ? form.symptoms.join(", ") : "—"}</span></div>
+                {form.pain_location && <div><span className="text-ink-muted">Pain location:</span> <span className="text-ink font-medium">{form.pain_location}</span></div>}
                 <div><span className="text-ink-muted">Severity:</span> <span className="text-ink font-medium">{form.severity}/10</span></div>
+                <div><span className="text-ink-muted">Time per day:</span> <span className="text-ink font-medium">{form.minutes_per_day === "thirty" ? "30 min" : form.minutes_per_day === "sixty" ? "60 min" : "As recommended"}</span></div>
+                <div><span className="text-ink-muted">Preferred times:</span> <span className="text-ink font-medium">{form.preferred_times.length ? form.preferred_times.join(", ").replace(/_/g, " ") : "Any time"}</span></div>
                 <div><span className="text-ink-muted">Program length:</span> <span className="text-ink font-medium">{form.program_length.replace("_", " ")}</span></div>
                 {form.has_autoimmune && <div className="text-terracotta">Autoimmune flagged — 30-day re-assessment included.</div>}
                 {form.pregnancy_or_pacemaker && <div className="text-terracotta">Safety flag noted.</div>}

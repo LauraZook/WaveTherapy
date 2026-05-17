@@ -54,6 +54,9 @@ class QuestionnaireSubmission(BaseModel):
     symptom_details: str = ""
     severity: int = Field(ge=1, le=10)
     duration: str  # less_than_week | weeks | months | years
+    pain_location: str = ""  # free-text body areas, only relevant for pain_inflammation
+    minutes_per_day: str = "as_recommended"  # thirty | sixty | as_recommended
+    preferred_times: List[str] = []  # morning | afternoon | during_work | evening
     has_autoimmune: bool = False
     autoimmune_details: str = ""
     medications: str = ""
@@ -69,6 +72,7 @@ class SessionItem(BaseModel):
     minutes: int
     instructions: str  # e.g. "Enter: AUTO, 646, RUN"
     notes: Optional[str] = ""
+    time_of_day: Optional[str] = ""  # morning | afternoon | during_work | evening | anytime
 
 
 class DaySchedule(BaseModel):
@@ -89,6 +93,7 @@ class GeneratedPlan(BaseModel):
     daily_tip: str
     schedule: List[DaySchedule]
     safety_notes: List[str]
+    tips: List[str] = []
     needs_30day_reassessment: bool
     created_at: str
     reminder_due_at: Optional[str] = None
@@ -126,6 +131,9 @@ async def _generate_plan_with_llm(sub: QuestionnaireSubmission) -> Dict[str, Any
     )
 
     catalog = build_llm_context()
+    minutes_budget = {"thirty": 30, "sixty": 60, "as_recommended": 999}.get(sub.minutes_per_day, 999)
+    times_text = ", ".join(sub.preferred_times) if sub.preferred_times else "anytime (no preference)"
+
     user_prompt = f"""
 Generate a personalized Wave Therapy program for this user.
 
@@ -135,6 +143,7 @@ USER PROFILE:
 - Primary health goal category: {sub.primary_goal}
 - Symptoms: {", ".join(sub.symptoms) if sub.symptoms else "(none specified)"}
 - Symptom details: {sub.symptom_details or "(none)"}
+- Pain location (if relevant): {sub.pain_location or "(none specified / full body)"}
 - Severity (1-10): {sub.severity}
 - Duration: {sub.duration}
 - Has autoimmune or complex condition: {sub.has_autoimmune} ({sub.autoimmune_details})
@@ -142,6 +151,8 @@ USER PROFILE:
 - Pregnancy/pacemaker (safety flag): {sub.pregnancy_or_pacemaker}
 - Lifestyle notes: {sub.lifestyle_notes or "(none)"}
 - Requested program length: {sub.program_length}  (one_day = 1 day, one_week = 7 days, thirty_day = 30 days)
+- Time available per day: {sub.minutes_per_day}  (target total minutes per day: {minutes_budget if minutes_budget < 999 else "no limit — follow recommended"})
+- Preferred time(s) of day: {times_text}
 
 CATALOG OF AVAILABLE CODES (pick ONLY from these):
 {catalog}
@@ -153,11 +164,30 @@ INSTRUCTIONS:
    - thirty_day → 30 days. You may compress by labeling repeating weekly patterns but produce all 30 days.
 2. Each session must be one entry from the catalog. Use exact code + name + minutes.
 3. Each session instructions string MUST be exactly: "Enter: AUTO, <CODE>, RUN"
-4. Lead with the primary_goal category but blend 1–2 supportive codes from other categories where helpful.
-5. If autoimmune is true OR severity >= 8 OR pregnancy_or_pacemaker is true: set needs_30day_reassessment=true and include 1–2 safety_notes (e.g., "Consult your physician before use if you have a pacemaker", "Schedule a 30-day re-assessment for autoimmune conditions").
-6. Provide a warm, friendly 2–3 sentence ai_summary addressing the user by first name.
-7. Provide a short headline (max 8 words) and a daily_tip (1 sentence on hydration/sleep/breathwork).
-8. Output STRICT JSON with this schema (no extra fields, no comments):
+4. **MINUTES BUDGET**: Total session minutes per day SHOULD stay near {minutes_budget if minutes_budget < 999 else "the recommended length per code"} minutes. Pick fewer/shorter codes if needed to fit. Never go more than +15 minutes over.
+5. **TIME-OF-DAY RULES** (set the time_of_day field on each session):
+   - User's preferred slots: {times_text}.
+   - Energizing codes (DNA Healing 222, Pineal/Cortex 444, Mental Clarity 636) MUST be scheduled in the MORNING.
+   - Chronic Fatigue / Mental Clarity codes → morning or during_work, never evening.
+   - Code 646 (Health, Wellness & Rejuvenation) is SLIGHTLY DROWSY — schedule it in the EVENING only.
+   - Code 647 (Earth Resonance) is safe to run while sleeping → evening.
+   - Insomnia 351 → evening.
+   - If user picked specific slots, only use those slots. If none picked, distribute sensibly.
+6. **PAIN RULES** (if primary_goal == pain_inflammation):
+   - If pain_location is empty OR mentions "all over"/"full body"/"chronic"/"fibromyalgia" → recommend code 274 (Fibromyalgia Pain & Inflammation) DAILY as the anchor session.
+   - If pain_location names a specific body part (wrists, carpal tunnel, elbow, tendons, knees, neck, back, hip, etc.) → use the closest catalog code (e.g. 159 elbow arthritic, 287 frozen shoulder, 400 stiff neck, 465 sciatica, 641 lower-back/extremities, 514 tendomyopathy) and ALTERNATE days with arthritis-related codes (159 elbow arthritic; 298 Gout/Uric Acid/Arthritis) for pain management.
+7. **DETOX RULES** (if primary_goal == detoxification):
+   - WEEK 1: General Detoxification (code 237) every OTHER day (Days 1, 3, 5, 7) with lighter Lymph Stasis 377 on the off days.
+   - WEEK 2: Liver focus — Liver Balance & Cleanse 579 on Days 8, 10, 12, 14 with General Detox 237 on Days 9, 11, 13.
+   - WEEK 3: Kidney focus — Kidney Balance & Cleanse 580 on Days 15, 17, 19, 21 with General Detox 237 on Days 16, 18, 20.
+   - WEEK 4: Lungs / Hypothalamus / Cellular focus — alternate 374 (Lungs Cleanse), 367 (Hypothalamus Cleanse), 161 (Cellular Cleanse) and finish with 237 General Detox on Day 30.
+   - For 1-week detox plans, do Week 1 only. For 1-day, just General Detox 237 + Lymph Stasis 377.
+8. Lead with the primary_goal category but blend 1–2 supportive codes from other categories where helpful.
+9. If autoimmune is true OR severity >= 8 OR pregnancy_or_pacemaker is true: set needs_30day_reassessment=true and include 1–2 safety_notes (e.g., "Consult your physician before use if you have a pacemaker", "Schedule a 30-day re-assessment for autoimmune conditions").
+10. Provide a warm, friendly 2–3 sentence ai_summary addressing the user by first name.
+11. Provide a short headline (max 8 words) and a daily_tip (1 sentence on hydration/sleep/breathwork).
+12. Provide 3–5 practical TIPS in the tips array (hydration during/after sessions, electrode pad vs stainless cylinder choice, consistency of daily use, pause/resume guidance, when to call a coach, etc.).
+13. Output STRICT JSON with this schema (no extra fields, no comments):
 
 {{
   "headline": "string",
@@ -167,12 +197,13 @@ INSTRUCTIONS:
   "primary_protocol_title": "string",
   "needs_30day_reassessment": true|false,
   "safety_notes": ["string", ...],
+  "tips": ["string", ...],
   "schedule": [
     {{
       "day": 1,
       "label": "Day 1",
       "sessions": [
-        {{ "code": 646, "name": "Health, Wellness & Rejuvenation", "minutes": 30, "instructions": "Enter: AUTO, 646, RUN", "notes": "" }}
+        {{ "code": 646, "name": "Health, Wellness & Rejuvenation", "minutes": 30, "instructions": "Enter: AUTO, 646, RUN", "notes": "", "time_of_day": "evening" }}
       ]
     }}
   ]
@@ -311,6 +342,7 @@ async def submit_questionnaire(sub: QuestionnaireSubmission):
         "daily_tip": plan_data.get("daily_tip", "Stay hydrated and rest well."),
         "schedule": plan_data.get("schedule", []),
         "safety_notes": plan_data.get("safety_notes", []),
+        "tips": plan_data.get("tips", []),
         "needs_30day_reassessment": needs_reassess,
         "created_at": _now_iso(),
         "reminder_due_at": reminder_due,
@@ -371,6 +403,9 @@ async def reassess(req: ReassessRequest):
         medications=prior_sub.get("medications", ""),
         pregnancy_or_pacemaker=prior_sub.get("pregnancy_or_pacemaker", False),
         lifestyle_notes=req.notes or prior_sub.get("lifestyle_notes", ""),
+        pain_location=prior_sub.get("pain_location", ""),
+        minutes_per_day=prior_sub.get("minutes_per_day", "as_recommended"),
+        preferred_times=prior_sub.get("preferred_times", []),
         program_length="thirty_day",
         consent_disclaimer=True,
     )
