@@ -101,6 +101,8 @@ class GeneratedPlan(BaseModel):
     needs_30day_reassessment: bool
     created_at: str
     reminder_due_at: Optional[str] = None
+    auto_emailed: Optional[bool] = False
+    emailed_at: Optional[str] = None
 
 
 class EmailPlanRequest(BaseModel):
@@ -420,7 +422,7 @@ async def get_protocol(key: str):
 
 
 @api_router.post("/questionnaire/submit", response_model=GeneratedPlan)
-async def submit_questionnaire(sub: QuestionnaireSubmission):
+async def submit_questionnaire(sub: QuestionnaireSubmission, background: BackgroundTasks):
     if not sub.consent_disclaimer:
         raise HTTPException(status_code=400, detail="You must accept the educational-use disclaimer to continue.")
 
@@ -455,9 +457,33 @@ async def submit_questionnaire(sub: QuestionnaireSubmission):
     }
 
     await db.plans.insert_one(plan_doc.copy())
+
+    # Fire-and-forget: email the plan to the user so they receive it in their inbox automatically
+    background.add_task(_auto_email_plan, plan_id)
+
     plan_doc.pop("_id", None)
     plan_doc.pop("submission", None)
     return plan_doc
+
+
+async def _auto_email_plan(plan_id: str) -> None:
+    """Background task: email the plan right after creation. Best-effort, swallow errors."""
+    try:
+        plan = await db.plans.find_one({"id": plan_id}, {"_id": 0})
+        if not plan:
+            return
+        html = _build_plan_html(plan)
+        subject = f"Your CuraWaves Personalized Program — {plan['headline']}"
+        result = await _send_email_async(plan["email"], subject, html)
+        await db.plans.update_one(
+            {"id": plan_id},
+            {"$set": {"emailed_at": _now_iso(), "email_result_id": result.get("id"), "auto_emailed": True}},
+        )
+    except HTTPException as e:
+        # e.g. Resend rejection — log and move on (user can still hit "Email me this plan")
+        logger.warning(f"Auto-email skipped for plan {plan_id}: {e.detail}")
+    except Exception as e:
+        logger.error(f"Auto-email failed for plan {plan_id}: {e}")
 
 
 @api_router.get("/plan/{plan_id}", response_model=GeneratedPlan)

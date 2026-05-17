@@ -25,6 +25,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("");
   const [form, setForm] = useState({
     first_name: "",
     email: "",
@@ -80,6 +81,20 @@ export default function Onboarding() {
       toast.error("Please accept the educational-use disclaimer.");
       return;
     }
+    const messages = [
+      "Reviewing your answers…",
+      "Selecting the right Wave Therapy codes…",
+      "Optimizing your schedule and timing…",
+      "Adding tips and safety notes…",
+      "Finalizing your personalized program…",
+    ];
+    let idx = 0;
+    setLoadingMsg(messages[0]);
+    const interval = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      setLoadingMsg(messages[idx]);
+    }, 4000);
+
     setSubmitting(true);
     try {
       const { data } = await api.post("/questionnaire/submit", form);
@@ -88,9 +103,17 @@ export default function Onboarding() {
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Could not generate plan. Please try again.");
     } finally {
+      clearInterval(interval);
+      setLoadingMsg("");
       setSubmitting(false);
     }
   };
+
+  const waitEstimate = {
+    one_day: "≈ 15 seconds",
+    one_week: "≈ 30–45 seconds",
+    thirty_day: "up to ~90 seconds — we're building all 30 days",
+  }[form.program_length];
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
@@ -509,6 +532,18 @@ export default function Onboarding() {
               </button>
             )}
           </div>
+
+          {submitting && (
+            <div className="mt-6 bg-ocean-light/50 border border-ocean/20 rounded-xl p-4 text-sm text-ocean animate-fade-in" data-testid="onboarding-loading-banner">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span className="font-medium">{loadingMsg}</span>
+              </div>
+              <p className="text-xs text-ink-muted mt-2 pl-6">
+                Estimated wait: {waitEstimate}. We'll also email a copy to <strong>{form.email}</strong> when it's ready.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

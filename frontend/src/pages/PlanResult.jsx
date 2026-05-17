@@ -182,6 +182,12 @@ export default function PlanResult() {
           <div>
             <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold">Your personalized program</p>
             <h1 className="font-serif text-3xl md:text-4xl text-ink mt-1">{plan.headline}</h1>
+            {plan.auto_emailed && (
+              <p data-testid="auto-email-badge" className="mt-2 inline-flex items-center gap-1.5 text-xs text-sage bg-[#EAF1ED] border border-sage/30 px-3 py-1 rounded-full">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                A copy has been emailed to <strong className="font-semibold">{plan.email}</strong>
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <button
