@@ -92,8 +92,10 @@ export default function Onboarding() {
       navigate(`/plan/${data.id}`);
     } catch (e) {
       const status = e?.response?.status;
-      const detail = e?.response?.data?.detail;
-      if (status === 504 || e?.code === "ECONNABORTED" || (e?.message || "").toLowerCase().includes("network")) {
+      const detail = e?.response?.data?.detail || e?.response?.data?.error;
+      if (status === 429) {
+        toast.error("You've generated several plans recently — please try again in about 15 minutes. (Your previous plans are still saved and emailed.)");
+      } else if (status === 504 || e?.code === "ECONNABORTED" || (e?.message || "").toLowerCase().includes("network")) {
         toast.error("Network hiccup — please try submitting again.");
       } else {
         toast.error(detail || "Could not generate plan. Please try again.");

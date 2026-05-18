@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Header, BackgroundTasks, Response
+from fastapi import FastAPI, APIRouter, HTTPException, Header, BackgroundTasks, Response, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -14,6 +14,9 @@ from datetime import datetime, timezone, timedelta
 
 import resend
 import anthropic
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from protocols_data import PROTOCOLS, get_all_protocols_summary, build_llm_context
 
@@ -40,7 +43,24 @@ anthropic_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY) if ANTHRO
 
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "curawaves-admin-2026")
 
+
+def _rate_limit_key(request: Request) -> str:
+    """Identify clients by the original IP behind Railway / Vercel proxies."""
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        # First IP in the comma-separated list is the original client
+        return fwd.split(",")[0].strip()
+    return get_remote_address(request)
+
+
+# Rate limiter — protects the LLM endpoint from abuse / accidental hammering.
+# Each plan generation costs real $$ on Anthropic. 5 plans / 15 min / IP is generous
+# for a real user (questionnaire takes ~1 min) and tight enough to stop scripted abuse.
+limiter = Limiter(key_func=_rate_limit_key, default_limits=["100/hour"])
+
 app = FastAPI(title="CuraWaves Onboarding API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 api_router = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -609,7 +629,8 @@ async def get_protocol(key: str):
 
 
 @api_router.post("/questionnaire/submit", response_model=GeneratedPlan)
-async def submit_questionnaire(sub: QuestionnaireSubmission, background: BackgroundTasks):
+@limiter.limit("5/15minutes")
+async def submit_questionnaire(request: Request, sub: QuestionnaireSubmission, background: BackgroundTasks):
     if not sub.consent_disclaimer:
         raise HTTPException(status_code=400, detail="You must accept the educational-use disclaimer to continue.")
 
