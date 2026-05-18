@@ -32,7 +32,6 @@ export default function PlanResult() {
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesSavedAt, setNotesSavedAt] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState("Reviewing your answers…");
-  const [elapsedSec, setElapsedSec] = useState(0);
 
   // Poll the plan until status flips off "pending". Backend generates async on Railway —
   // this avoids any proxy/edge timeout on long-running 30-day generations.
@@ -87,7 +86,7 @@ export default function PlanResult() {
     return () => { cancelled = true; if (timeoutHandle) clearTimeout(timeoutHandle); };
   }, [id]);
 
-  // Rotating loading messages + elapsed timer while we wait for the plan.
+  // Rotating loading messages while we wait for the plan.
   useEffect(() => {
     if (!loading) return;
     const messages = [
@@ -102,8 +101,7 @@ export default function PlanResult() {
       idx = (idx + 1) % messages.length;
       setLoadingMsg(messages[idx]);
     }, 4000);
-    const secInterval = setInterval(() => setElapsedSec((s) => s + 1), 1000);
-    return () => { clearInterval(msgInterval); clearInterval(secInterval); };
+    return () => { clearInterval(msgInterval); };
   }, [loading]);
 
   // Debounced auto-save for notes
@@ -211,7 +209,6 @@ export default function PlanResult() {
   };
 
   if (loading) {
-    const fmtTime = `${Math.floor(elapsedSec / 60)}:${String(elapsedSec % 60).padStart(2, "0")}`;
     return (
       <div className="bg-paper py-16 md:py-24" data-testid="plan-pending">
         <div className="max-w-xl mx-auto px-6 text-center animate-fade-in">
@@ -224,7 +221,6 @@ export default function PlanResult() {
             We're tailoring your Wave Therapy schedule. This usually takes 20–60 seconds.
             A copy will also land in your inbox the moment it's ready.
           </p>
-          <p className="mt-4 text-xs text-ink-muted/70 font-mono">{fmtTime} elapsed</p>
         </div>
       </div>
     );

@@ -444,7 +444,7 @@ export default function Onboarding() {
                       <div className="font-serif text-2xl text-ink">{label}</div>
                       <div className="text-sm text-ink-muted mt-1">{desc}</div>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 ${
+                    <div className={`shrink-0 w-5 h-5 rounded-full border-2 ${
                       form.program_length === key ? "bg-ocean border-ocean" : "border-[#D5CEBC]"
                     }`}></div>
                   </button>
