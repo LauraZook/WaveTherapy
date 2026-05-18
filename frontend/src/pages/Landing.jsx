@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Sparkles, Activity, Droplets, Shield, Zap, Brain,
-  ArrowRight, Heart, Waves, Quote, ChevronRight,
+  ArrowRight, Heart, Waves, Quote, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { PROTOCOLS_META, PROTOCOL_ORDER } from "../lib/api";
 
@@ -23,16 +23,28 @@ const FREEDOM = [
 
 const TESTIMONIALS = [
   { name: "Kim P.", location: "Mesa, AZ",
-    quote: "With their guidance, they helped me create a program specific to me. In less than a year, I'd cleared major infections naturally." },
-  { name: "Dr. Coleen Murphy ND, LAc", location: "San Juan Capistrano, CA",
-    quote: "I've used my CuraWaves machine for years. Steady improvements in vitality and reduction in muscle tension. The frequency settings are easy to target specific concerns." },
+    quote: "I was diagnosed with Lyme Disease with several co-infections and Mold Toxicity. I chose to tackle this naturally — with their guidance, we built a program specific to my infections. In less than a year, I killed strains of Borrelia, Burgdorferi, and completely got rid of Bartonella. I also used Wave Therapy as part of my Covid healing — I believe it prevented me from being hospitalized." },
+  { name: "Dr. Coleen Murphy Assalian ND, LAc", location: "San Juan Capistrano, CA",
+    quote: "As a Naturopathic Physician I've been using my CuraWaves machine for years. I'm genuinely impressed with the results — steady improvement in vitality, reduction in muscle tension and fatigue. The frequency settings are easy to adjust and the guide makes it simple to target specific concerns. A compelling option for anyone exploring biofrequency-based wellness." },
   { name: "Coach Mark", location: "Laguna Niguel, CA",
-    quote: "Wave Therapy accelerated my healing after surgeries. Both surgeons were amazed at how soon I was back on my feet." },
+    quote: "After both a lower-back discectomy and knee surgery I was in a wheelchair for five months, in excruciating pain. Wave Therapy became a big part of my recovery — it accelerated my healing and dramatically reduced inflammation. Both of my surgeons were amazed at how quickly I got back on my feet. I just wish I'd known about this recovery tool sooner." },
+  { name: "Christa N.", location: "Newport Beach, CA",
+    quote: "I've been using Wave Therapy for me and my family for the last five years. At one point my autoimmune pain made it really hard to do simple things like open a door — now I'm able to keep working because of the machine and my personalized plan. My kids and husband zap away colds, flus and aches with it. Curawaves coaching has been such a valuable resource for our whole family." },
+  { name: "Grace K.", location: "Laguna Niguel, CA",
+    quote: "I purchased a Wave Therapy machine to help my husband manage pain from cancer treatment, then gifted one to my mother for her arthritis because it works so well. The frequency therapies extended my husband's life and reduced his pain and suffering. There's a wealth of knowledge for integrative health here — we are forever grateful for this machine and their exceptional service." },
+  { name: "Drew B.", location: "San Clemente, CA",
+    quote: "It feels like a massage on the inside. After months in a hospital bed with a serious respiratory condition I was likely going to be on oxygen for life. I biohacked my way back — and I'm not only walking and breathing on my own again, I'm surfing and living a normal life mostly free from pain. I use Wave Therapy to keep healing because it helps my whole body work stronger." },
 ];
 
 const bentoSpans = ["md:col-span-7", "md:col-span-5", "md:col-span-4", "md:col-span-4", "md:col-span-4", "md:col-span-12"];
 
 export default function Landing() {
+  const [tIdx, setTIdx] = useState(0);
+  const tCount = TESTIMONIALS.length;
+  const prevT = () => setTIdx((i) => (i - 1 + tCount) % tCount);
+  const nextT = () => setTIdx((i) => (i + 1) % tCount);
+  const active = TESTIMONIALS[tIdx];
+
   return (
     <div className="bg-paper">
       {/* Hero */}
@@ -180,20 +192,62 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="bg-[#F5F2EB] py-14 md:py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="font-serif text-3xl md:text-4xl text-ink mb-8 text-center">Real stories from the CuraWaves community</h2>
-          <div className="grid md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="bg-white border border-[#EAE5D9] rounded-2xl p-7">
-                <Quote className="w-6 h-6 text-terracotta mb-3" />
-                <p className="text-ink-muted text-sm leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-4 pt-4 border-t border-[#EAE5D9]">
-                  <div className="text-sm font-semibold text-ink">{t.name}</div>
-                  <div className="text-xs text-ink-muted">{t.location}</div>
-                </div>
+      {/* Testimonials carousel */}
+      <section className="bg-[#F5F2EB] py-14 md:py-20" data-testid="testimonials-section">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="font-serif text-3xl md:text-4xl text-ink mb-2 text-center">Real stories from the CuraWaves community</h2>
+          <p className="text-sm text-ink-muted text-center mb-10">Story {tIdx + 1} of {tCount}</p>
+
+          <div className="relative">
+            {/* Prev arrow */}
+            <button
+              type="button"
+              onClick={prevT}
+              data-testid="testimonial-prev"
+              aria-label="Previous story"
+              className="absolute -left-2 md:-left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-[#EAE5D9] text-ink-muted hover:text-ocean hover:border-ocean shadow-sm flex items-center justify-center transition-colors z-10 active:scale-95"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <div
+              key={tIdx}
+              data-testid="testimonial-card"
+              className="bg-white border border-[#EAE5D9] rounded-2xl p-8 md:p-10 mx-10 md:mx-12 animate-fade-up"
+            >
+              <Quote className="w-7 h-7 text-terracotta mb-4" />
+              <p className="text-ink-muted text-base md:text-lg leading-relaxed">&ldquo;{active.quote}&rdquo;</p>
+              <div className="mt-6 pt-6 border-t border-[#EAE5D9]">
+                <div className="text-sm font-semibold text-ink">{active.name}</div>
+                <div className="text-xs text-ink-muted mt-0.5">{active.location}</div>
               </div>
+            </div>
+
+            {/* Next arrow */}
+            <button
+              type="button"
+              onClick={nextT}
+              data-testid="testimonial-next"
+              aria-label="Next story"
+              className="absolute -right-2 md:-right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-ocean text-white hover:bg-ocean-dark shadow-md flex items-center justify-center transition-colors z-10 active:scale-95"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Dot indicators */}
+          <div className="flex items-center justify-center gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setTIdx(i)}
+                aria-label={`Go to story ${i + 1}`}
+                data-testid={`testimonial-dot-${i}`}
+                className={`h-2 rounded-full transition-all ${
+                  i === tIdx ? "w-8 bg-ocean" : "w-2 bg-[#D5CEBC] hover:bg-ink-muted"
+                }`}
+              ></button>
             ))}
           </div>
         </div>
