@@ -198,7 +198,8 @@ INSTRUCTIONS:
 2. Each session must be one entry from the catalog. Use exact code + name + minutes.
 3. Each session instructions string MUST follow this format:
    - DEFAULT (most codes — AUTO programs): `"Enter: AUTO, <CODE>, RUN"`
-   - **Code 444 (Pineal — single channel)**: instructions MUST be exactly `"Press: 10, SELECT, 444, RUN"` (the leading number is the minute duration for the single channel — default is 3 min, we set 10)
+   - **Code 222 (DNA — single channel)**: instructions MUST be exactly `"Enter: 7, SELECT, 222, RUN"` and `minutes` MUST be 7 (single-channel session, run for 7 minutes)
+   - **Code 444 (Pineal — single channel)**: instructions MUST be exactly `"Press: 10, SELECT, 444, RUN"` (single channel, 10 minutes)
    - **Code 161 (Cellular Cleanse — single channel)**: instructions MUST be exactly `"Press: 30, SELECT, 161, RUN"`
 3a. **Cross-protocol go-to sessions** — feel free to include these in ANY plan (regardless of primary_goal) as an occasional weekly support:
    - **Code 161 (Cellular Cleanse)** — a great WEEKLY solo session; include it once per week for meditation, health & wellness, pain, detoxification, repair & recovery, AND immune boost programs. Always 30 minutes.
@@ -399,8 +400,9 @@ def _expand_thirty_day_template(data: Dict[str, Any]) -> None:
 # Deterministic overrides for codes with special keystroke sequences or fixed durations.
 # Applied AFTER the LLM responds so we don't depend on the model getting every detail right.
 SPECIAL_CODE_OVERRIDES = {
-    444: {"instructions": "Press: 10, SELECT, 444, RUN", "minutes": 10, "max_per_plan": 4},  # every other day, 10-min single channel
-    161: {"instructions": "Press: 30, SELECT, 161, RUN", "minutes": 30, "max_per_plan": 1},  # weekly
+    222: {"instructions": "Enter: 7, SELECT, 222, RUN", "minutes": 7},                                # single-channel DNA, 7 min
+    444: {"instructions": "Press: 10, SELECT, 444, RUN", "minutes": 10, "max_per_plan": 4},           # single-channel Pineal, every other day, 10 min
+    161: {"instructions": "Press: 30, SELECT, 161, RUN", "minutes": 30, "max_per_plan": 1},           # weekly
     # 646 enforcement is handled separately by _enforce_646_minimums (requires program_length context).
     646: {"instructions": "Enter: AUTO, 646, RUN", "minutes": 90},
 }

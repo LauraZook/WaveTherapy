@@ -16,7 +16,7 @@ PROTOCOLS = {
         "codes": [
             {"code": 646, "name": "Health, Wellness & Rejuvenation", "minutes": 30, "targets": "general vitality, cellular regeneration — NOTE: slightly drowsy; recommend EVENING only"},
             {"code": 647, "name": "General Health & Wellness (Earth Resonance)", "minutes": 30, "targets": "stress, EMF neutralization, sleep deprivation, immune support — safe to run while sleeping (evening)"},
-            {"code": 222, "name": "DNA Healing & Cellular Rejuvenation (Energizing)", "minutes": 4, "targets": "DNA repair, cellular rejuvenation — ENERGIZING, recommend MORNING; every 3rd day x 40 sessions"},
+            {"code": 222, "name": "DNA Healing & Cellular Rejuvenation (Energizing) — single-channel", "minutes": 7, "targets": "DNA repair, cellular rejuvenation — ENERGIZING, recommend MORNING; SINGLE CHANNEL session (Enter: 7, SELECT, 222, RUN). Every 3rd day x 40 sessions."},
             {"code": 444, "name": "Pineal Gland & Cortex Rejuvenation (Energizing)", "minutes": 10, "targets": "mental clarity, third eye, brain support — ENERGIZING, recommend MORNING; run EVERY OTHER DAY only (not daily) x 40 days"},
             {"code": 636, "name": "Mental Clarity (Energizing)", "minutes": 45, "targets": "focus, mental sharpness, brain fog — ENERGIZING, recommend MORNING or during_work"},
             {"code": 638, "name": "Memory", "minutes": 27, "targets": "memory, cognitive recall — morning preferred"},
@@ -119,7 +119,7 @@ PROTOCOLS = {
         "codes": [
             {"code": 636, "name": "Mental Clarity (Meditation Companion)", "minutes": 45, "targets": "PRIMARY meditation companion — run during a 20–45 min sit; pause with any number key when complete"},
             {"code": 444, "name": "Pineal Gland & Cortex Rejuvenation", "minutes": 10, "targets": "third-eye / awareness support — great for shorter 10-min meditations"},
-            {"code": 222, "name": "DNA Healing & Cellular Rejuvenation", "minutes": 4, "targets": "short pre-meditation primer"},
+            {"code": 222, "name": "DNA Healing & Cellular Rejuvenation — single-channel", "minutes": 7, "targets": "short pre-meditation primer — SINGLE CHANNEL (Enter: 7, SELECT, 222, RUN), 7 minutes"},
             {"code": 647, "name": "Earth Resonance (Calm Focus)", "minutes": 30, "targets": "calmer breath-focused meditation, evenings"},
             {"code": 351, "name": "Calm / Insomnia Soothe", "minutes": 24, "targets": "deeply calming for body-scan or yoga-nidra style meditation"},
             {"code": 235, "name": "Mood Support", "minutes": 9, "targets": "uplift before meditation"},
