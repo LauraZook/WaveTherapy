@@ -88,9 +88,9 @@ export default function Landing() {
       {/* Protocols Bento */}
       <section id="protocols" className="max-w-7xl mx-auto px-6 py-14 md:py-20">
         <div className="max-w-2xl mb-10">
-          <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">Five Protocol Pathways</p>
+          <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-3">Six Protocol Pathways</p>
           <h2 className="font-serif text-4xl md:text-5xl text-ink leading-tight">
-            Five protocols. Hundreds of waves. One plan crafted for you.
+            Six protocols. Hundreds of waves. One plan crafted for you.
           </h2>
           <p className="mt-4 text-ink-muted">
             Your AI-generated program selects exact <span className="font-mono text-ocean">AUTO &gt; Code &gt; RUN</span> sessions from the official Wave Therapy catalog.
