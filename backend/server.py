@@ -92,17 +92,21 @@ class GeneratedPlan(BaseModel):
     program_length: str
     primary_protocol_key: str
     primary_protocol_title: str
-    ai_summary: str
-    headline: str
-    daily_tip: str
-    schedule: List[DaySchedule]
-    safety_notes: List[str]
+    ai_summary: str = ""
+    headline: str = "Your CuraWaves Program"
+    daily_tip: str = ""
+    schedule: List[DaySchedule] = []
+    safety_notes: List[str] = []
     tips: List[str] = []
-    needs_30day_reassessment: bool
+    needs_30day_reassessment: bool = False
     created_at: str
     reminder_due_at: Optional[str] = None
     auto_emailed: Optional[bool] = False
     emailed_at: Optional[str] = None
+    # Generation lifecycle: "pending" while the LLM is working, "ready" when finished,
+    # "failed" if generation errored. Frontend polls until status flips off "pending".
+    status: str = "ready"
+    error: Optional[str] = None
 
 
 class EmailPlanRequest(BaseModel):
@@ -144,6 +148,25 @@ async def _generate_plan_with_llm(sub: QuestionnaireSubmission) -> Dict[str, Any
     minutes_budget = {"thirty": 30, "sixty": 60, "as_recommended": 90}.get(sub.minutes_per_day, 90)
     times_text = ", ".join(sub.preferred_times) if sub.preferred_times else "anytime (no preference)"
 
+    # For 30-day plans we generate a 7-day template + 4 weekly focuses, then expand
+    # deterministically to 30 days. This keeps Claude output small and fast (~25s vs ~80s)
+    # and avoids proxy/network timeouts on long generations.
+    is_thirty_day_template = sub.program_length == "thirty_day"
+    schedule_instruction = (
+        "thirty_day → produce a SINGLE 7-day `schedule` representing the TYPICAL weekly pattern "
+        "(this template will be repeated across all 4 weeks). ALSO produce a `weekly_focuses` array "
+        "of EXACTLY 4 short focus statements (one per week), e.g. \"Week 1 — Build the foundation\", "
+        "\"Week 2 — Deepen the work\", \"Week 3 — Layer in support\", \"Week 4 — Integrate & sustain\". "
+        "For detox specifically, use the WEEK 1/2/3/4 focus rotation described in DETOX RULES below."
+        if is_thirty_day_template
+        else "thirty_day → 30 days. You may compress by labeling repeating weekly patterns but produce all 30 days."
+    )
+    extra_schema = (
+        ',\n  "weekly_focuses": ["Week 1 — ...", "Week 2 — ...", "Week 3 — ...", "Week 4 — ..."]'
+        if is_thirty_day_template
+        else ""
+    )
+
     user_prompt = f"""
 Generate a personalized Wave Therapy program for this user.
 
@@ -171,7 +194,7 @@ INSTRUCTIONS:
 1. Build a day-by-day schedule that respects program_length:
    - one_day → 1 day with 2–4 sessions
    - one_week → 7 days, 1–3 sessions per day, vary daily
-   - thirty_day → 30 days. You may compress by labeling repeating weekly patterns but produce all 30 days.
+   - {schedule_instruction}
 2. Each session must be one entry from the catalog. Use exact code + name + minutes.
 3. Each session instructions string MUST follow this format:
    - DEFAULT (most codes — AUTO programs): `"Enter: AUTO, <CODE>, RUN"`
@@ -234,7 +257,7 @@ INSTRUCTIONS:
         {{ "code": 646, "name": "Health, Wellness & Rejuvenation", "minutes": 30, "instructions": "Enter: AUTO, 646, RUN", "notes": "", "time_of_day": "evening" }}
       ]
     }}
-  ]
+  ]{extra_schema}
 }}
 """
 
@@ -251,9 +274,9 @@ INSTRUCTIONS:
         {"role": "assistant", "content": "{"},
     ]
 
-    # Token budget per program length. 30-day plans need significantly more output room
-    # to fit all 30 days of sessions inside the JSON without truncating mid-object.
-    max_tokens = {"one_day": 4000, "one_week": 8000, "thirty_day": 20000}.get(sub.program_length, 8000)
+    # Token budget per program length. With the template approach for 30-day, output stays
+    # small and fast. For 1-week we keep a healthy buffer.
+    max_tokens = {"one_day": 4000, "one_week": 8000, "thirty_day": 8000}.get(sub.program_length, 8000)
 
     async def _ask(messages: List[Dict[str, str]]) -> str:
         try:
@@ -323,8 +346,54 @@ INSTRUCTIONS:
             )
             raise HTTPException(status_code=502, detail="Failed to parse plan from AI. Please try again.")
 
+    # 30-day template expansion: take the 7-day template the LLM produced and replicate it
+    # across 30 days, applying the weekly focus labels per week.
+    if sub.program_length == "thirty_day":
+        _expand_thirty_day_template(data)
+
     _normalize_schedule(data, sub)
     return data
+
+
+def _expand_thirty_day_template(data: Dict[str, Any]) -> None:
+    """Expand a 7-day template `schedule` to a full 30-day schedule in-place."""
+    template = data.get("schedule") or []
+    if len(template) >= 30:
+        # Already a full 30-day plan (LLM returned full schedule); keep as-is.
+        return
+    if not template:
+        return
+
+    # Ensure we have exactly 7 template days. If LLM returned 1-6, pad by reusing the last.
+    if len(template) < 7:
+        template = template + [template[-1]] * (7 - len(template))
+        template = template[:7]
+
+    focuses = data.get("weekly_focuses") or []
+    expanded: List[Dict[str, Any]] = []
+    for day_num in range(1, 31):
+        # Weeks 1..4 cover days 1-28; days 29-30 reuse Week 4 focus + template start.
+        week_idx = min((day_num - 1) // 7, 3)
+        focus = focuses[week_idx].strip() if week_idx < len(focuses) and focuses[week_idx] else ""
+        template_day = template[(day_num - 1) % 7]
+        # Deep-copy sessions so we don't share references across weeks.
+        new_sessions = [dict(s) for s in template_day.get("sessions", [])]
+        label_core = template_day.get("label") or f"Day {day_num}"
+        # Strip any leading "Day N — " from the template label so we don't double up.
+        if " — " in label_core:
+            _, _, label_tail = label_core.partition(" — ")
+        else:
+            label_tail = label_core
+        # Compose: "Day 8 — Week 2: Deepen the work" or fallback to just the template tail.
+        if focus:
+            new_label = f"Day {day_num} — {focus}"
+        else:
+            new_label = f"Day {day_num} — {label_tail}" if label_tail and label_tail != f"Day {(day_num-1)%7 + 1}" else f"Day {day_num}"
+        expanded.append({"day": day_num, "label": new_label, "sessions": new_sessions})
+
+    data["schedule"] = expanded
+    # weekly_focuses is post-processing metadata, not part of the public plan schema.
+    data.pop("weekly_focuses", None)
 
 
 # Deterministic overrides for codes with special keystroke sequences or fixed durations.
@@ -545,48 +614,80 @@ async def submit_questionnaire(sub: QuestionnaireSubmission, background: Backgro
     if sub.primary_goal not in PROTOCOLS:
         raise HTTPException(status_code=400, detail="Invalid primary_goal")
 
-    plan_data = await _generate_plan_with_llm(sub)
-
-    needs_reassess = bool(plan_data.get("needs_30day_reassessment")) or sub.has_autoimmune
+    # Create a "pending" plan immediately and run the LLM in the background. The frontend
+    # navigates to the plan page right away and polls until status flips to "ready" — this
+    # avoids any proxy/edge timeout on long generations.
+    plan_id = str(uuid.uuid4())
     reminder_due = None
-    if needs_reassess or sub.program_length == "thirty_day":
+    if sub.has_autoimmune or sub.program_length == "thirty_day":
         reminder_due = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
-    plan_id = str(uuid.uuid4())
-    plan_doc = {
+    pending_doc = {
         "id": plan_id,
         "email": sub.email,
         "first_name": sub.first_name,
         "program_length": sub.program_length,
         "primary_protocol_key": sub.primary_goal,
         "primary_protocol_title": PROTOCOLS[sub.primary_goal]["title"],
-        "ai_summary": plan_data.get("ai_summary", ""),
-        "headline": plan_data.get("headline", "Your CuraWaves Program"),
-        "daily_tip": plan_data.get("daily_tip", "Stay hydrated and rest well."),
-        "schedule": plan_data.get("schedule", []),
-        "safety_notes": plan_data.get("safety_notes", []),
-        "tips": plan_data.get("tips", []),
-        "needs_30day_reassessment": needs_reassess,
+        "ai_summary": "",
+        "headline": "Generating your personalized program…",
+        "daily_tip": "",
+        "schedule": [],
+        "safety_notes": [],
+        "tips": [],
+        "needs_30day_reassessment": False,
         "created_at": _now_iso(),
         "reminder_due_at": reminder_due,
         "submission": sub.model_dump(),
+        "status": "pending",
+        "error": None,
     }
+    await db.plans.insert_one(pending_doc.copy())
 
-    await db.plans.insert_one(plan_doc.copy())
+    background.add_task(_generate_and_finalize_plan, plan_id, sub)
 
-    # Fire-and-forget: email the plan to the user so they receive it in their inbox automatically
-    background.add_task(_auto_email_plan, plan_id)
+    pending_doc.pop("_id", None)
+    pending_doc.pop("submission", None)
+    return pending_doc
 
-    plan_doc.pop("_id", None)
-    plan_doc.pop("submission", None)
-    return plan_doc
+
+async def _generate_and_finalize_plan(plan_id: str, sub: QuestionnaireSubmission) -> None:
+    """Run the LLM, persist the final plan, then auto-email. Updates status to ready/failed."""
+    try:
+        plan_data = await _generate_plan_with_llm(sub)
+        needs_reassess = bool(plan_data.get("needs_30day_reassessment")) or sub.has_autoimmune
+        update = {
+            "ai_summary": plan_data.get("ai_summary", ""),
+            "headline": plan_data.get("headline", "Your CuraWaves Program"),
+            "daily_tip": plan_data.get("daily_tip", "Stay hydrated and rest well."),
+            "schedule": plan_data.get("schedule", []),
+            "safety_notes": plan_data.get("safety_notes", []),
+            "tips": plan_data.get("tips", []),
+            "needs_30day_reassessment": needs_reassess,
+            "status": "ready",
+            "error": None,
+        }
+        await db.plans.update_one({"id": plan_id}, {"$set": update})
+        await _auto_email_plan(plan_id)
+    except HTTPException as e:
+        logger.error(f"Plan generation failed for {plan_id}: {e.detail}")
+        await db.plans.update_one(
+            {"id": plan_id},
+            {"$set": {"status": "failed", "error": str(e.detail)}},
+        )
+    except Exception as e:
+        logger.exception(f"Unexpected plan generation error for {plan_id}: {e}")
+        await db.plans.update_one(
+            {"id": plan_id},
+            {"$set": {"status": "failed", "error": "Unexpected error generating plan. Please try again."}},
+        )
 
 
 async def _auto_email_plan(plan_id: str) -> None:
-    """Background task: email the plan right after creation. Best-effort, swallow errors."""
+    """Background task: email the plan right after it's ready. Best-effort, swallow errors."""
     try:
         plan = await db.plans.find_one({"id": plan_id}, {"_id": 0})
-        if not plan:
+        if not plan or plan.get("status") != "ready" or not plan.get("schedule"):
             return
         html = _build_plan_html(plan)
         subject = f"Your CuraWaves Personalized Program — {plan['headline']}"

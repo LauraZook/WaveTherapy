@@ -25,7 +25,6 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState("");
   const [form, setForm] = useState({
     first_name: "",
     email: "",
@@ -81,49 +80,28 @@ export default function Onboarding() {
       toast.error("Please accept the educational-use disclaimer.");
       return;
     }
-    const messages = [
-      "Reviewing your answers…",
-      "Selecting the right Wave Therapy codes…",
-      "Optimizing your schedule and timing…",
-      "Adding tips and safety notes…",
-      "Finalizing your personalized program…",
-    ];
-    let idx = 0;
-    setLoadingMsg(messages[0]);
-    const interval = setInterval(() => {
-      idx = (idx + 1) % messages.length;
-      setLoadingMsg(messages[idx]);
-    }, 4000);
-
     setSubmitting(true);
     try {
       const { data } = await api.post("/questionnaire/submit", form);
       if (!data || !data.id) {
-        toast.error("Plan generated but the response was incomplete. Please refresh and try again.");
+        toast.error("Could not start plan generation. Please try again.");
         return;
       }
-      toast.success("Your personalized program is ready.");
+      // Backend returns immediately with a pending plan_id — navigate so the user sees
+      // the rotating loading messages on the PlanResult page while we poll.
       navigate(`/plan/${data.id}`);
     } catch (e) {
       const status = e?.response?.status;
       const detail = e?.response?.data?.detail;
       if (status === 504 || e?.code === "ECONNABORTED" || (e?.message || "").toLowerCase().includes("network")) {
-        toast.error("The plan is taking longer than expected. Please check your email in a minute — if your plan arrives, you can also reload this page.");
+        toast.error("Network hiccup — please try submitting again.");
       } else {
         toast.error(detail || "Could not generate plan. Please try again.");
       }
     } finally {
-      clearInterval(interval);
-      setLoadingMsg("");
       setSubmitting(false);
     }
   };
-
-  const waitEstimate = {
-    one_day: "≈ 15 seconds",
-    one_week: "≈ 30–45 seconds",
-    thirty_day: "up to ~90 seconds — we're building all 30 days",
-  }[form.program_length];
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
@@ -547,10 +525,10 @@ export default function Onboarding() {
             <div className="mt-6 bg-ocean-light/50 border border-ocean/20 rounded-xl p-4 text-sm text-ocean animate-fade-in" data-testid="onboarding-loading-banner">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                <span className="font-medium">{loadingMsg}</span>
+                <span className="font-medium">Starting your plan…</span>
               </div>
               <p className="text-xs text-ink-muted mt-2 pl-6">
-                Estimated wait: {waitEstimate}. We'll also email a copy to <strong>{form.email}</strong> when it's ready.
+                Taking you to your plan page — we'll keep building it there. We'll also email a copy to <strong>{form.email}</strong> when it's ready.
               </p>
             </div>
           )}

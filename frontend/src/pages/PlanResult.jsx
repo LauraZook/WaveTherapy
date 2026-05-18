@@ -31,37 +31,80 @@ export default function PlanResult() {
   const [notes, setNotes] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesSavedAt, setNotesSavedAt] = useState(null);
+  const [loadingMsg, setLoadingMsg] = useState("Reviewing your answers…");
+  const [elapsedSec, setElapsedSec] = useState(0);
 
+  // Poll the plan until status flips off "pending". Backend generates async on Railway —
+  // this avoids any proxy/edge timeout on long-running 30-day generations.
   useEffect(() => {
     let cancelled = false;
     if (!id || id === "undefined") {
       setLoading(false);
       return () => { cancelled = true; };
     }
-    (async () => {
+    let pollDelayMs = 2500;
+    let timeoutHandle;
+
+    const tick = async () => {
       try {
         const { data } = await api.get(`/plan/${id}`);
         if (cancelled) return;
         if (!data || !data.id) {
           toast.error("Plan not found.");
-        } else {
-          setPlan(data);
+          setLoading(false);
+          return;
         }
+        if (data.status === "failed") {
+          toast.error(data.error || "Plan generation failed. Please try again.");
+          setPlan(data);
+          setLoading(false);
+          return;
+        }
+        if (data.status === "pending") {
+          // keep polling
+          timeoutHandle = setTimeout(tick, pollDelayMs);
+          return;
+        }
+        // status === "ready" (or legacy plans without status field)
+        setPlan(data);
+        setLoading(false);
       } catch (e) {
-        if (!cancelled) toast.error("Plan not found.");
-      } finally {
-        if (!cancelled) setLoading(false);
+        // Transient error — keep polling a couple more times before giving up
+        if (!cancelled) timeoutHandle = setTimeout(tick, pollDelayMs);
       }
-      // Notes are optional — failing here shouldn't surface an error
+    };
+
+    tick();
+
+    // Notes are optional — failing here shouldn't surface an error
+    (async () => {
       try {
         const notesRes = await api.get(`/plan/${id}/notes`);
         if (!cancelled) setNotes(notesRes.data.notes || "");
-      } catch (_e) {
-        // ignore — empty notes is the default state
-      }
+      } catch (_e) { /* ignore — empty notes is the default state */ }
     })();
-    return () => { cancelled = true; };
+
+    return () => { cancelled = true; if (timeoutHandle) clearTimeout(timeoutHandle); };
   }, [id]);
+
+  // Rotating loading messages + elapsed timer while we wait for the plan.
+  useEffect(() => {
+    if (!loading) return;
+    const messages = [
+      "Reviewing your answers…",
+      "Selecting the right Wave Therapy codes…",
+      "Optimizing your schedule and timing…",
+      "Adding tips and safety notes…",
+      "Finalizing your personalized program…",
+    ];
+    let idx = 0;
+    const msgInterval = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      setLoadingMsg(messages[idx]);
+    }, 4000);
+    const secInterval = setInterval(() => setElapsedSec((s) => s + 1), 1000);
+    return () => { clearInterval(msgInterval); clearInterval(secInterval); };
+  }, [loading]);
 
   // Debounced auto-save for notes
   useEffect(() => {
@@ -168,18 +211,47 @@ export default function PlanResult() {
   };
 
   if (loading) {
+    const fmtTime = `${Math.floor(elapsedSec / 60)}:${String(elapsedSec % 60).padStart(2, "0")}`;
     return (
-      <div className="flex items-center justify-center py-32 text-ink-muted">
-        <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading your plan…
+      <div className="bg-paper py-16 md:py-24" data-testid="plan-pending">
+        <div className="max-w-xl mx-auto px-6 text-center animate-fade-in">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-ocean-light/60 mb-5">
+            <Loader2 className="w-6 h-6 text-ocean animate-spin" />
+          </div>
+          <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-2">Building your program</p>
+          <h1 className="font-serif text-3xl md:text-4xl text-ink mb-3">{loadingMsg}</h1>
+          <p className="text-sm text-ink-muted">
+            We're tailoring your Wave Therapy schedule. This usually takes 20–60 seconds.
+            A copy will also land in your inbox the moment it's ready.
+          </p>
+          <p className="mt-4 text-xs text-ink-muted/70 font-mono">{fmtTime} elapsed</p>
+        </div>
       </div>
     );
   }
 
   if (!plan) {
     return (
-      <div className="text-center py-32">
+      <div className="text-center py-32" data-testid="plan-not-found">
         <p className="text-ink-muted">We couldn&apos;t find that plan.</p>
         <Link to="/onboarding" className="mt-4 inline-block text-ocean">Start a new questionnaire</Link>
+      </div>
+    );
+  }
+
+  if (plan.status === "failed") {
+    return (
+      <div className="bg-paper py-16 md:py-24" data-testid="plan-failed">
+        <div className="max-w-xl mx-auto px-6 text-center animate-fade-in">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-terracotta-light mb-5">
+            <AlertTriangle className="w-6 h-6 text-terracotta" />
+          </div>
+          <h1 className="font-serif text-3xl text-ink mb-3">We hit a snag</h1>
+          <p className="text-sm text-ink-muted mb-6">{plan.error || "Plan generation failed. Please try again."}</p>
+          <Link to="/onboarding" className="inline-flex items-center gap-2 bg-ocean hover:bg-ocean-dark text-white text-sm font-medium px-6 py-3 rounded-full transition-colors">
+            Try the questionnaire again <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
     );
   }
