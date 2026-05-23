@@ -4,7 +4,7 @@ import pytest
 import requests
 from datetime import datetime, timezone, timedelta
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://therapy-goal-planner.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://wave-therapy-dev.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 ADMIN_TOKEN = "curawaves-admin-2026"
 TIMEOUT_LLM = 90  # LLM can take 10-30s
