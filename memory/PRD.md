@@ -45,7 +45,26 @@ Local code changes do **NOT** appear at `wavetherapy.ai` until the user clicks
 "Save to GitHub" → Vercel/Railway redeploy.
 
 ## Recent Changes (CHANGELOG)
-### May 2026 — Current session
+### May 2026 (continued) — In-app testimonials, mobile scroll fix
+- **(a) Shop CTA in auto-emailed plan HTML** — `_build_plan_html` now includes a second
+  CTA card under "Book a coaching session" pointing to `curawaves.com/collections/all`.
+- **(b) Dedicated 30-day testimonial reminder email** — every plan now stores
+  `testimonial_reminder_due_at = created_at + 30 days`. New cron endpoint
+  `POST /api/admin/send-testimonial-reminders` (admin-token gated) sends a dedicated
+  testimonial email. Re-assessment reminder (`/api/admin/send-reminders`) cleaned up
+  and now points to `wavetherapy.ai/reassess`.
+- **(c) In-app testimonial submission form** — new `/testimonial` page replaces the
+  Google Form. Accepts `?plan_id=` to prefill via `GET /api/plan/{id}/testimonial-prefill`.
+  New endpoints `POST /api/testimonials` (rate limited 5/hour) +
+  `GET /api/admin/testimonials`. New `testimonials` MongoDB collection. Admin page
+  rewritten with Plans / Testimonials tabs, aggregate stats, detail drawer,
+  publish-consent flag display.
+- **(d) Mobile onboarding scroll-to-top** — `Onboarding.jsx` now blurs focused inputs +
+  scrolls to top via window.scrollTo and `scrollIntoView` on a top-of-card ref on every
+  step transition.
+- Verified: backend 19/19 tests passing, frontend 6/6 tests passing.
+
+### May 2026 — Earlier this session
 - Added "Shop Wave Therapy" CTA card on `PlanResult` page → `https://curawaves.com/collections/all`.
 - Added "Share your Wave Therapy story" testimonial CTA on `PlanResult` page →
   Google Form `https://docs.google.com/forms/d/e/1FAIpQLSeycdA_QBbIaF91nRzq25MS62uj6pdICuQkhZ2NLcR6HZyKvw/viewform`.
