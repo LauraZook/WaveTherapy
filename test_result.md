@@ -286,7 +286,7 @@ backend:
 frontend:
   - task: "In-app testimonial submission page (/testimonial)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/Testimonial.jsx"
     stuck_count: 0
     priority: "high"
@@ -300,10 +300,34 @@ frontend:
           buttons), first_name, email, headline, story, primary_goal (only shown if no
           plan context), allow_publish checkbox. Submits to POST /api/testimonials. Shows
           a success state on completion with Shop + Home CTAs. Route registered in App.js.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ TESTED & WORKING. All test cases passed:
+          
+          STANDALONE MODE (no plan_id):
+          - Form renders with all required data-testids: testimonial-form, testimonial-star-1 through 5, 
+            testimonial-first-name, testimonial-email, testimonial-headline, testimonial-story, 
+            testimonial-goal, testimonial-publish, testimonial-submit
+          - Star rating works correctly: clicked star-3, verified exactly 3 stars filled
+          - Submit button properly disabled when form is empty
+          - Submit button enabled after filling all required fields
+          - Form submission successful with valid data
+          - Success page displays "Your story has been submitted" message
+          - Shop and Home CTAs present on success page
+          
+          WITH PLAN_ID PREFILL:
+          - Personalized greeting displays correctly: "Hi Michael, how did Wave Therapy go?"
+          - Protocol pill shows program details: "1-Week · Health & Wellness"
+          - Goal field is correctly HIDDEN when plan context is present
+          - First name is prefilled from plan data
+          - Email field is NOT prefilled (correct for privacy)
+          - Form submission successful with plan_id linkage
+          - Already submitted warning displays correctly when revisiting
 
   - task: "PlanResult testimonial CTA points to in-app form"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/PlanResult.jsx"
     stuck_count: 0
     priority: "high"
@@ -315,10 +339,21 @@ frontend:
           Replaced previous Google Form `<a>` with React Router `<Link to="/testimonial?plan_id=...">`.
           The downloaded HTML plan still uses an absolute URL but now points to
           ${window.location.origin}/testimonial?plan_id=... instead of Google Forms.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ TESTED & WORKING. All test cases passed:
+          - Both shop-cta and testimonial-cta render on plan page
+          - Shop CTA (data-testid="shop-cta-link") has correct href: https://curawaves.com/collections/all
+          - Shop CTA has target="_blank" (opens in new tab, correct)
+          - Testimonial CTA (data-testid="testimonial-cta-link") has NO target attribute (internal Link, correct)
+          - Clicking testimonial CTA navigates to /testimonial?plan_id={plan_id} in same tab
+          - Testimonial page loads with personalized greeting after navigation
+          - Downloaded HTML plan also includes testimonial CTA with absolute URL
 
   - task: "Admin dashboard testimonials tab + reminder button"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/Admin.jsx"
     stuck_count: 0
     priority: "medium"
@@ -332,10 +367,24 @@ frontend:
           POST /api/admin/send-testimonial-reminders. Plans table gets a new "Testimonial"
           column showing Submitted / Reminder sent / Due date / —. Testimonial cards
           show stars, headline, story preview, publish flag, and a detail drawer.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ TESTED & WORKING. All test cases passed:
+          - Admin login works with token "curawaves-admin-2026"
+          - Both tabs render: admin-tab-submissions and admin-tab-testimonials
+          - Testimonials tab displays grid (data-testid="admin-testimonials-grid")
+          - Found 3 testimonial cards in grid (from previous test submissions)
+          - Both reminder buttons present: admin-send-reminders and admin-send-testimonial-reminders
+          - Clicking "Send testimonial reminders" button triggers API call and shows toast
+          - Submissions table includes new "Testimonial" column header
+          - Testimonial column shows status: Submitted / Reminder sent / Due date / —
+          - Testimonial cards display: stars, headline, story preview, publish flag
+          - Detail drawer opens when clicking "View" on testimonial card
 
   - task: "Onboarding mobile: scroll to top on every step change"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/Onboarding.jsx"
     stuck_count: 0
     priority: "high"
@@ -349,21 +398,30 @@ frontend:
           (2) window.scrollTo({top:0, behavior:'smooth'}), and
           (3) ref.scrollIntoView({block:'start'}). User now always lands on the first
           question of the new step.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ TESTED & WORKING. All test cases passed:
+          - Mobile viewport set to 390x740 (iPhone size)
+          - Step 0: Filled required fields (first name, email, age)
+          - Scrolled to bottom (1043px), verified scroll position > 200px
+          - Clicked Continue to advance to step 1
+          - After transition, scroll position reset to 186px (near top)
+          - Step 1 heading "What's your primary goal?" visible at y=93px (< 400px threshold)
+          - Step 1→2 transition: Scrolled to 1447px, clicked Continue
+          - After transition, scroll position reset to 186px
+          - Step 2 heading "What are you experiencing?" visible at y=93px
+          - Smooth scroll animation works correctly (1200ms wait time appropriate)
+          - User consistently lands at top of new step on mobile
 
 metadata:
   created_by: "main_agent"
-  version: "1.2"
-  test_sequence: 2
+  version: "1.3"
+  test_sequence: 3
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Testimonial submission endpoint (POST /api/testimonials)"
-    - "Dedicated testimonial reminder endpoint (POST /api/admin/send-testimonial-reminders)"
-    - "Plan creation now sets testimonial_reminder_due_at on every plan"
-    - "Plan testimonial-prefill endpoint (GET /api/plan/{id}/testimonial-prefill)"
-    - "Admin testimonials list (GET /api/admin/testimonials)"
-    - "Auto-sent plan email includes Shop CTA"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -418,3 +476,47 @@ agent_communication:
       - All validation working correctly (rating 1-5, story >=10 chars, required fields)
       
       NO ISSUES FOUND. All backend functionality is working correctly.
+  - agent: "testing"
+    message: |
+      ✅ ALL FRONTEND TESTS PASSED (6/6 tests)
+      
+      Completed comprehensive UI testing of all frontend features:
+      
+      TEST 1: TESTIMONIAL PAGE - STANDALONE (NO PLAN_ID) ✅
+      - All form elements render with correct data-testids
+      - Star rating interaction works (clicked 3, verified 3 filled)
+      - Form validation works (submit disabled when empty, enabled when valid)
+      - Successful submission shows success page with Shop + Home CTAs
+      
+      TEST 2: TESTIMONIAL PAGE - WITH PLAN_ID PREFILL ✅
+      - Personalized greeting displays: "Hi Michael, how did Wave Therapy go?"
+      - Protocol pill shows: "1-Week · Health & Wellness"
+      - Goal field correctly HIDDEN when plan context present
+      - First name prefilled, email NOT prefilled (privacy)
+      - Form submission successful with plan linkage
+      
+      TEST 3: PLANRESULT TESTIMONIAL CTA LINKS ✅
+      - Both shop-cta and testimonial-cta render correctly
+      - Shop CTA: href=https://curawaves.com/collections/all, target="_blank" ✓
+      - Testimonial CTA: internal Link (no target), correct ✓
+      - Navigation to /testimonial?plan_id={id} works correctly
+      - Personalized greeting appears after navigation
+      
+      TEST 4: ADMIN DASHBOARD - TESTIMONIALS TAB ✅
+      - Both tabs render (submissions, testimonials)
+      - Testimonials grid displays with 3 cards
+      - Both reminder buttons present and functional
+      - Send testimonial reminders button works (toast appears)
+      - Submissions table includes new "Testimonial" column
+      
+      TEST 5: ONBOARDING MOBILE SCROLL-TO-TOP ✅
+      - Mobile viewport (390x740) tested
+      - Scroll position resets on step transitions (1043px → 186px)
+      - Step headings visible at top after transition (y < 100px)
+      - Tested step 0→1 and step 1→2 transitions successfully
+      
+      TEST 6: LANDING PAGE REGRESSION ✅
+      - Hero element renders correctly
+      - No regressions detected
+      
+      NO ISSUES FOUND. All frontend functionality is working correctly.
