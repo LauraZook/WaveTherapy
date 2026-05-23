@@ -8,7 +8,8 @@ import CodeChip from "../components/CodeChip";
 const LENGTH_LABEL = { one_day: "One-Time", one_week: "1-Week", thirty_day: "30-Day" };
 
 const SHOP_URL = "https://curawaves.com/collections/all";
-const TESTIMONIAL_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeycdA_QBbIaF91nRzq25MS62uj6pdICuQkhZ2NLcR6HZyKvw/viewform?usp=sharing&ouid=104961284593695175210";
+// In-app testimonial submission flow (lands directly in the admin dashboard).
+const testimonialUrlForPlan = (planId) => `/testimonial?plan_id=${encodeURIComponent(planId)}`;
 
 const TIME_BADGE = {
   morning: { label: "Morning", Icon: Sun, cls: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -186,7 +187,7 @@ export default function PlanResult() {
   <div style="margin-top:18px;padding:20px;background:#FDF1E5;border:1px solid #EAE5D9;border-radius:12px;text-align:center;">
     <h3 style="font-family:Georgia,serif;color:#7A5A3A;margin:0 0 6px;font-weight:500;font-size:18px;">Share your Wave Therapy story</h3>
     <p style="color:#5C6A72;font-size:13px;margin:0 0 14px;line-height:1.55;">Coming up on your 30-day check-in? We'd love to hear how Wave Therapy has worked for you. Your testimonial helps others on the same journey.</p>
-    <a href="${TESTIMONIAL_URL}" style="display:inline-block;background:#D27A59;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">Submit a testimonial</a>
+    <a href="${window.location.origin}/testimonial?plan_id=${encodeURIComponent(plan.id)}" style="display:inline-block;background:#D27A59;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">Submit a testimonial</a>
   </div>
   <p style="font-size:11px;color:#A0AAB0;margin-top:24px;">Plan ID: ${plan.id} · Generated ${new Date(plan.created_at).toLocaleString()}</p>
 </div>
@@ -507,15 +508,13 @@ export default function PlanResult() {
               </p>
             </div>
           </div>
-          <a
-            href={TESTIMONIAL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={testimonialUrlForPlan(plan.id)}
             data-testid="testimonial-cta-link"
             className="shrink-0 inline-flex items-center gap-2 bg-terracotta hover:bg-[#B86847] text-white text-sm font-medium px-5 py-3 rounded-full transition-colors"
           >
             Submit a testimonial <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
 
         {plan.needs_30day_reassessment && (

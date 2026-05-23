@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import PlanResult from "./pages/PlanResult";
 import Reassess from "./pages/Reassess";
+import Testimonial from "./pages/Testimonial";
 import Admin from "./pages/Admin";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/plan/:id" element={<PlanResult />} />
           <Route path="/reassess" element={<Reassess />} />
+          <Route path="/testimonial" element={<Testimonial />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
         <Footer />

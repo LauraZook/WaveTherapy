@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Activity, Droplets, Shield, Zap, Brain } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +25,10 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  // Scroll anchor placed just above the questionnaire card. On every step change,
+  // we scroll this into view so mobile users always land on the first question
+  // of the new step (otherwise they'd be stuck mid-page after pressing Continue).
+  const stepTopRef = useRef(null);
   const [form, setForm] = useState({
     first_name: "",
     email: "",
@@ -75,6 +79,25 @@ export default function Onboarding() {
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
+  // After every step change, scroll the questionnaire to the top so the user
+  // sees the first question of the new step (especially important on mobile,
+  // where the previous step's bottom Continue button leaves them scrolled down).
+  useEffect(() => {
+    // Scroll the whole viewport to the top of the questionnaire card. We use
+    // both window scroll + a ref-targeted scrollIntoView to handle Safari iOS,
+    // which sometimes ignores window.scrollTo while a focused input is active.
+    if (typeof window !== "undefined") {
+      // Blur any focused field before scrolling (iOS keeps the page panned otherwise).
+      if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }
+    if (stepTopRef.current) {
+      stepTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [step]);
+
   const submit = async () => {
     if (!form.consent_disclaimer) {
       toast.error("Please accept the educational-use disclaimer.");
@@ -110,6 +133,8 @@ export default function Onboarding() {
   return (
     <div className="bg-paper min-h-[calc(100vh-200px)] py-10 md:py-16">
       <div className="max-w-2xl mx-auto px-6">
+        {/* Scroll target — keeps the top of the questionnaire in view on each step change */}
+        <div ref={stepTopRef} aria-hidden="true" />
         <div className="mb-8 text-center">
           <p className="text-xs tracking-[0.25em] uppercase text-sage font-semibold mb-2">
             Step {step + 1} of {STEPS.length} — {STEPS[step]}

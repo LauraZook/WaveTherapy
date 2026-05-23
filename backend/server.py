@@ -144,6 +144,17 @@ class ReassessRequest(BaseModel):
     notes: str = ""
 
 
+class TestimonialSubmission(BaseModel):
+    first_name: str = Field(min_length=1, max_length=80)
+    email: EmailStr
+    rating: int = Field(ge=1, le=5)
+    headline: str = Field(min_length=1, max_length=160)
+    story: str = Field(min_length=10, max_length=5000)
+    primary_goal: str = ""   # optional — prefilled from plan if available
+    allow_publish: bool = True
+    plan_id: Optional[str] = None
+
+
 # ----------------- Helpers -----------------
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -577,6 +588,16 @@ def _build_plan_html(plan: Dict[str, Any]) -> str:
         Book a coaching session
       </a>
     </div>
+    <div style="margin-top:18px;padding:20px;background:#E9F1F5;border:1px solid #C9DCE5;border-radius:12px;text-align:center;">
+      <h3 style="font-family:Georgia,serif;color:#2C5E7A;margin:0 0 6px;font-weight:500;font-size:18px;">Shop Wave Therapy</h3>
+      <p style="color:#5C6A72;font-size:13px;margin:0 0 14px;line-height:1.55;">
+        Explore Wave Therapy machines, accessories, and concierge services at CuraWaves.
+      </p>
+      <a href="https://curawaves.com/collections/all"
+         style="display:inline-block;background:#2C5E7A;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">
+        Visit the CuraWaves shop
+      </a>
+    </div>
   </div>
 </div>
 """
@@ -644,6 +665,9 @@ async def submit_questionnaire(request: Request, sub: QuestionnaireSubmission, b
     reminder_due = None
     if sub.has_autoimmune or sub.program_length == "thirty_day":
         reminder_due = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    # Every plan gets a testimonial reminder ~30 days after creation, regardless of
+    # autoimmune flag or program length. Separate from the re-assessment reminder.
+    testimonial_reminder_due = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     pending_doc = {
         "id": plan_id,
@@ -661,6 +685,7 @@ async def submit_questionnaire(request: Request, sub: QuestionnaireSubmission, b
         "needs_30day_reassessment": False,
         "created_at": _now_iso(),
         "reminder_due_at": reminder_due,
+        "testimonial_reminder_due_at": testimonial_reminder_due,
         "submission": sub.model_dump(),
         "status": "pending",
         "error": None,
@@ -753,6 +778,25 @@ async def get_plan_notes(plan_id: str):
     return {"notes": doc.get("user_notes", ""), "updated_at": doc.get("notes_updated_at")}
 
 
+@api_router.get("/plan/{plan_id}/testimonial-prefill")
+async def get_plan_testimonial_prefill(plan_id: str):
+    """Public lightweight read so the in-app testimonial form can greet the user
+    and prefill non-sensitive context (name, protocol, length). Email is intentionally
+    not returned — the user re-enters it for verification."""
+    doc = await db.plans.find_one(
+        {"id": plan_id},
+        {"_id": 0, "first_name": 1, "primary_protocol_title": 1, "program_length": 1, "testimonial_submitted_at": 1},
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return {
+        "first_name": doc.get("first_name", ""),
+        "primary_protocol_title": doc.get("primary_protocol_title", ""),
+        "program_length": doc.get("program_length", ""),
+        "already_submitted": bool(doc.get("testimonial_submitted_at")),
+    }
+
+
 @api_router.post("/plan/email")
 async def email_plan(req: EmailPlanRequest, background: BackgroundTasks):
     plan = await db.plans.find_one({"id": req.plan_id}, {"_id": 0})
@@ -820,7 +864,6 @@ async def admin_send_reminders(x_admin_token: Optional[str] = Header(default=Non
         {"reminder_due_at": {"$lte": now_iso, "$ne": None}, "reminder_sent_at": {"$exists": False}},
         {"_id": 0},
     )
-    testimonial_url = "https://docs.google.com/forms/d/e/1FAIpQLSeycdA_QBbIaF91nRzq25MS62uj6pdICuQkhZ2NLcR6HZyKvw/viewform?usp=sharing&ouid=104961284593695175210"
     sent = 0
     async for plan in cursor:
         html = f"""
@@ -828,16 +871,9 @@ async def admin_send_reminders(x_admin_token: Optional[str] = Header(default=Non
           <div style='max-width:560px;margin:0 auto;background:#fff;border:1px solid #EAE5D9;border-radius:16px;padding:28px;'>
             <h2 style='font-family:Georgia,serif;color:#2C5E7A;margin:0 0 12px;'>Hi {plan['first_name']}, time for your 30-day check-in</h2>
             <p style='color:#2A3439;font-size:14px;line-height:1.6;margin:0 0 16px;'>You're due for a CuraWaves re-assessment. Update your symptoms and we'll refresh your program with a new personalized 30-day schedule.</p>
-            <p style='margin:0 0 22px;'>
+            <p style='margin:0 0 8px;'>
               <a href='https://wavetherapy.ai/reassess' style='background:#2C5E7A;color:#fff;padding:12px 22px;border-radius:30px;text-decoration:none;font-size:13px;font-weight:500;display:inline-block;'>Start re-assessment</a>
             </p>
-            <div style='margin-top:8px;padding:18px;background:#FDF1E5;border:1px solid #EAE5D9;border-radius:12px;'>
-              <h3 style='font-family:Georgia,serif;color:#7A5A3A;margin:0 0 6px;font-weight:500;font-size:17px;'>Share your Wave Therapy story</h3>
-              <p style='color:#5C6A72;font-size:13px;line-height:1.55;margin:0 0 12px;'>
-                If Wave Therapy has helped you over the last 30 days, we'd love to hear about it. Your testimonial helps others discover what's possible.
-              </p>
-              <a href='{testimonial_url}' style='background:#D27A59;color:#fff;padding:11px 20px;border-radius:30px;text-decoration:none;font-size:13px;font-weight:500;display:inline-block;'>Submit a testimonial</a>
-            </div>
             <p style='color:#A0AAB0;font-size:11px;margin-top:22px;'>CuraWaves · Wave Therapy · For education &amp; investigative use only.</p>
           </div>
         </div>
@@ -846,6 +882,115 @@ async def admin_send_reminders(x_admin_token: Optional[str] = Header(default=Non
         await db.plans.update_one({"id": plan["id"]}, {"$set": {"reminder_sent_at": now_iso}})
         sent += 1
     return {"reminders_sent": sent}
+
+
+@api_router.post("/admin/send-testimonial-reminders")
+async def admin_send_testimonial_reminders(x_admin_token: Optional[str] = Header(default=None)):
+    """Cron-triggered: email plans whose testimonial_reminder_due_at is due."""
+    if x_admin_token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    now_iso = _now_iso()
+    cursor = db.plans.find(
+        {
+            "testimonial_reminder_due_at": {"$lte": now_iso, "$ne": None},
+            "testimonial_reminder_sent_at": {"$exists": False},
+            # Only fully-generated plans — don't pester users whose plan never finished.
+            "status": "ready",
+        },
+        {"_id": 0},
+    )
+    sent = 0
+    async for plan in cursor:
+        first_name = plan.get("first_name", "there")
+        testimonial_url = (
+            "https://wavetherapy.ai/testimonial"
+            f"?plan_id={plan['id']}"
+        )
+        html = f"""
+        <div style='font-family:Arial,sans-serif;background:#FDFBF7;padding:24px;'>
+          <div style='max-width:560px;margin:0 auto;background:#fff;border:1px solid #EAE5D9;border-radius:16px;padding:28px;'>
+            <h2 style='font-family:Georgia,serif;color:#2C5E7A;margin:0 0 12px;'>Hi {first_name}, how was your first 30 days?</h2>
+            <p style='color:#2A3439;font-size:14px;line-height:1.6;margin:0 0 16px;'>
+              It's been about a month since we generated your Wave Therapy plan — we'd love to hear how it went.
+              Your experience helps others on the same journey understand what's possible.
+            </p>
+            <p style='margin:0 0 22px;'>
+              <a href='{testimonial_url}' style='background:#D27A59;color:#fff;padding:13px 24px;border-radius:30px;text-decoration:none;font-size:14px;font-weight:500;display:inline-block;'>Share your Wave Therapy story</a>
+            </p>
+            <p style='color:#5C6A72;font-size:12px;line-height:1.55;margin:0 0 6px;'>
+              Takes about 90 seconds — rate your experience, share a few sentences, and let us know if we can publish it on CuraWaves.
+            </p>
+            <p style='color:#A0AAB0;font-size:11px;margin-top:22px;'>CuraWaves · Wave Therapy · For education &amp; investigative use only.</p>
+          </div>
+        </div>
+        """
+        try:
+            await _send_email_async(plan["email"], "How was your first 30 days with Wave Therapy?", html)
+            await db.plans.update_one(
+                {"id": plan["id"]}, {"$set": {"testimonial_reminder_sent_at": now_iso}}
+            )
+            sent += 1
+        except HTTPException as e:
+            logger.warning(f"Testimonial reminder skipped for plan {plan['id']}: {e.detail}")
+        except Exception as e:
+            logger.error(f"Testimonial reminder failed for plan {plan['id']}: {e}")
+    return {"testimonial_reminders_sent": sent}
+
+
+@api_router.post("/testimonials")
+@limiter.limit("5/hour")
+async def submit_testimonial(request: Request, sub: TestimonialSubmission):
+    """Public endpoint — customers submit their testimonial. Rate limited to deter abuse."""
+    testimonial_id = str(uuid.uuid4())
+    primary_goal = sub.primary_goal
+    plan_program_length = None
+    # If linked to a real plan, opportunistically denormalize the primary protocol so the
+    # admin dashboard can filter / display nice context.
+    if sub.plan_id:
+        plan = await db.plans.find_one({"id": sub.plan_id}, {"_id": 0, "primary_protocol_key": 1, "primary_protocol_title": 1, "program_length": 1})
+        if plan:
+            primary_goal = primary_goal or plan.get("primary_protocol_title", "")
+            plan_program_length = plan.get("program_length")
+            # Mark the plan so the admin sees a testimonial was received and we don't
+            # send another reminder.
+            await db.plans.update_one(
+                {"id": sub.plan_id},
+                {"$set": {
+                    "testimonial_submitted_at": _now_iso(),
+                    "testimonial_id": testimonial_id,
+                    # Ensure we don't re-send a reminder later
+                    "testimonial_reminder_sent_at": _now_iso(),
+                }},
+            )
+
+    doc = {
+        "id": testimonial_id,
+        "first_name": sub.first_name.strip(),
+        "email": sub.email,
+        "rating": sub.rating,
+        "headline": sub.headline.strip(),
+        "story": sub.story.strip(),
+        "primary_goal": primary_goal,
+        "allow_publish": sub.allow_publish,
+        "plan_id": sub.plan_id,
+        "plan_program_length": plan_program_length,
+        "created_at": _now_iso(),
+        "ip": _rate_limit_key(request),
+    }
+    await db.testimonials.insert_one(doc.copy())
+    doc.pop("_id", None)
+    doc.pop("ip", None)
+    return {"status": "ok", "id": testimonial_id}
+
+
+@api_router.get("/admin/testimonials")
+async def admin_testimonials(x_admin_token: Optional[str] = Header(default=None)):
+    if x_admin_token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    docs = await db.testimonials.find({}, {"_id": 0, "ip": 0}).sort("created_at", -1).to_list(1000)
+    avg = round(sum(d.get("rating", 0) for d in docs) / len(docs), 2) if docs else 0
+    return {"count": len(docs), "average_rating": avg, "testimonials": docs}
 
 
 app.include_router(api_router)
@@ -867,7 +1012,12 @@ async def ensure_indexes():
         await db.plans.create_index("email")
         await db.plans.create_index("created_at")
         await db.plans.create_index("reminder_due_at")
-        logger.info("MongoDB indexes ensured on plans collection.")
+        await db.plans.create_index("testimonial_reminder_due_at")
+        await db.testimonials.create_index("id", unique=True)
+        await db.testimonials.create_index("email")
+        await db.testimonials.create_index("created_at")
+        await db.testimonials.create_index("plan_id")
+        logger.info("MongoDB indexes ensured on plans + testimonials collections.")
     except Exception as e:
         logger.warning(f"Index creation skipped: {e}")
 
