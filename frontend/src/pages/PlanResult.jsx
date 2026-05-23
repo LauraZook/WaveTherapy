@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Printer, Mail, ArrowRight, AlertTriangle, Loader2, CheckCircle2, BookOpen, Sun, Moon, Briefcase, Cloud, Lightbulb, Download, NotebookPen, LayoutGrid, List } from "lucide-react";
+import { Printer, Mail, ArrowRight, AlertTriangle, Loader2, CheckCircle2, BookOpen, Sun, Moon, Briefcase, Cloud, Lightbulb, Download, NotebookPen, LayoutGrid, List, ShoppingBag, MessageSquareHeart } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import CodeChip from "../components/CodeChip";
 
 const LENGTH_LABEL = { one_day: "One-Time", one_week: "1-Week", thirty_day: "30-Day" };
+
+const SHOP_URL = "https://curawaves.com/collections/all";
+const TESTIMONIAL_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeycdA_QBbIaF91nRzq25MS62uj6pdICuQkhZ2NLcR6HZyKvw/viewform?usp=sharing&ouid=104961284593695175210";
 
 const TIME_BADGE = {
   morning: { label: "Morning", Icon: Sun, cls: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -174,6 +177,16 @@ export default function PlanResult() {
     <h3 style="font-family:Georgia,serif;color:#2A3439;margin:0 0 6px;font-weight:500;font-size:18px;">Want to talk through your plan?</h3>
     <p style="color:#5C6A72;font-size:13px;margin:0 0 14px;line-height:1.55;">To discuss your Wave Therapy personalized plan with a CuraWaves Health Coach, please book a virtual coaching session with our team.</p>
     <a href="https://curawaves.com/products/wellness-consultation-concierge-services" style="display:inline-block;background:#2C5E7A;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">Book a coaching session</a>
+  </div>
+  <div style="margin-top:18px;padding:20px;background:#E9F1F5;border:1px solid #C9DCE5;border-radius:12px;text-align:center;">
+    <h3 style="font-family:Georgia,serif;color:#2C5E7A;margin:0 0 6px;font-weight:500;font-size:18px;">Shop Wave Therapy</h3>
+    <p style="color:#5C6A72;font-size:13px;margin:0 0 14px;line-height:1.55;">Explore Wave Therapy machines, accessories, and concierge services at CuraWaves.</p>
+    <a href="${SHOP_URL}" style="display:inline-block;background:#2C5E7A;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">Visit the CuraWaves shop</a>
+  </div>
+  <div style="margin-top:18px;padding:20px;background:#FDF1E5;border:1px solid #EAE5D9;border-radius:12px;text-align:center;">
+    <h3 style="font-family:Georgia,serif;color:#7A5A3A;margin:0 0 6px;font-weight:500;font-size:18px;">Share your Wave Therapy story</h3>
+    <p style="color:#5C6A72;font-size:13px;margin:0 0 14px;line-height:1.55;">Coming up on your 30-day check-in? We'd love to hear how Wave Therapy has worked for you. Your testimonial helps others on the same journey.</p>
+    <a href="${TESTIMONIAL_URL}" style="display:inline-block;background:#D27A59;color:#fff;text-decoration:none;font-size:13px;font-weight:500;padding:12px 22px;border-radius:30px;">Submit a testimonial</a>
   </div>
   <p style="font-size:11px;color:#A0AAB0;margin-top:24px;">Plan ID: ${plan.id} · Generated ${new Date(plan.created_at).toLocaleString()}</p>
 </div>
@@ -455,6 +468,54 @@ export default function PlanResult() {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Day 1 — ran 646 at 9pm, slept like a rock.&#10;Day 2 — added 274 for back pain, felt looser by evening.&#10;Question for coach: …"
           />
+        </div>
+
+        {/* Shop CTA */}
+        <div className="no-print mt-8 bg-gradient-to-br from-ocean-light/60 to-white border border-ocean/20 rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5" data-testid="shop-cta">
+          <div className="flex items-start gap-4">
+            <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-ocean/10 text-ocean shrink-0">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-xl md:text-2xl text-ink">Shop Wave Therapy</h3>
+              <p className="text-sm text-ink-muted mt-1 leading-relaxed">
+                Explore Wave Therapy machines, accessories, and concierge services at CuraWaves.
+              </p>
+            </div>
+          </div>
+          <a
+            href={SHOP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="shop-cta-link"
+            className="shrink-0 inline-flex items-center gap-2 bg-ocean hover:bg-ocean-dark text-white text-sm font-medium px-5 py-3 rounded-full transition-colors"
+          >
+            Visit the shop <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+
+        {/* Testimonial CTA */}
+        <div className="no-print mt-4 bg-terracotta-light/60 border border-[#EAE5D9] rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5" data-testid="testimonial-cta">
+          <div className="flex items-start gap-4">
+            <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-terracotta/15 text-terracotta shrink-0">
+              <MessageSquareHeart className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-xl md:text-2xl text-ink">Share your Wave Therapy story</h3>
+              <p className="text-sm text-ink-muted mt-1 leading-relaxed">
+                Approaching your 30-day check-in? We'd love to hear how Wave Therapy is working for you — your testimonial helps others on the same journey.
+              </p>
+            </div>
+          </div>
+          <a
+            href={TESTIMONIAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="testimonial-cta-link"
+            className="shrink-0 inline-flex items-center gap-2 bg-terracotta hover:bg-[#B86847] text-white text-sm font-medium px-5 py-3 rounded-full transition-colors"
+          >
+            Submit a testimonial <ArrowRight className="w-4 h-4" />
+          </a>
         </div>
 
         {plan.needs_30day_reassessment && (

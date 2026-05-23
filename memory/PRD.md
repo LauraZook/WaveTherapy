@@ -45,7 +45,16 @@ Local code changes do **NOT** appear at `wavetherapy.ai` until the user clicks
 "Save to GitHub" → Vercel/Railway redeploy.
 
 ## Recent Changes (CHANGELOG)
-### Feb 2026 — Current session
+### May 2026 — Current session
+- Added "Shop Wave Therapy" CTA card on `PlanResult` page → `https://curawaves.com/collections/all`.
+- Added "Share your Wave Therapy story" testimonial CTA on `PlanResult` page →
+  Google Form `https://docs.google.com/forms/d/e/1FAIpQLSeycdA_QBbIaF91nRzq25MS62uj6pdICuQkhZ2NLcR6HZyKvw/viewform`.
+- Mirrored both CTAs into the downloadable HTML plan (`downloadPlan` in `PlanResult.jsx`).
+- Updated the 30-day check-in reminder email (`POST /api/admin/send-reminders`) to include
+  the testimonial submission link below the "Start re-assessment" button. Re-assessment CTA
+  also fixed to point to `wavetherapy.ai/reassess` instead of the curawaves.com home.
+
+### Feb 2026
 - Swapped the "Deep Meditation & Prayer" protocol image on Landing to a real
   Unsplash prayer photo (`photo-1762013728549-f50828e8a113`) by Christian Harb.
   File: `/app/frontend/src/lib/api.js`.
@@ -64,11 +73,11 @@ Local code changes do **NOT** appear at `wavetherapy.ai` until the user clicks
 
 ## Backlog / Roadmap
 **P1**
-- "Shop Wave Therapy" affiliate CTA on PlanResult page (drives revenue from plan users).
+- _(done May 2026)_ "Shop Wave Therapy" affiliate CTA on PlanResult page.
 
 **P2**
 - Google Analytics / Plausible on wavetherapy.ai for visitor & conversion insights.
-- Customer testimonial submission flow at the 30-day mark.
+- Customer testimonial submission flow at the 30-day mark.   _(May 2026: testimonial link is now shipped on PlanResult page + in the 30-day check-in reminder email. Still pending: in-app testimonial collection / dashboard.)_
 - 3-email Resend nurture drip after first plan generation.
 
 ## Known Gotchas

@@ -820,14 +820,25 @@ async def admin_send_reminders(x_admin_token: Optional[str] = Header(default=Non
         {"reminder_due_at": {"$lte": now_iso, "$ne": None}, "reminder_sent_at": {"$exists": False}},
         {"_id": 0},
     )
+    testimonial_url = "https://docs.google.com/forms/d/e/1FAIpQLSeycdA_QBbIaF91nRzq25MS62uj6pdICuQkhZ2NLcR6HZyKvw/viewform?usp=sharing&ouid=104961284593695175210"
     sent = 0
     async for plan in cursor:
         html = f"""
         <div style='font-family:Arial,sans-serif;background:#FDFBF7;padding:24px;'>
           <div style='max-width:560px;margin:0 auto;background:#fff;border:1px solid #EAE5D9;border-radius:16px;padding:28px;'>
-            <h2 style='font-family:Georgia,serif;color:#2C5E7A;'>Hi {plan['first_name']}, time for your 30-day check-in</h2>
-            <p>You're due for a CuraWaves re-assessment. Update your symptoms and we'll refresh your program.</p>
-            <p><a href='https://curawaves.com' style='background:#2C5E7A;color:#fff;padding:12px 22px;border-radius:30px;text-decoration:none;'>Start re-assessment</a></p>
+            <h2 style='font-family:Georgia,serif;color:#2C5E7A;margin:0 0 12px;'>Hi {plan['first_name']}, time for your 30-day check-in</h2>
+            <p style='color:#2A3439;font-size:14px;line-height:1.6;margin:0 0 16px;'>You're due for a CuraWaves re-assessment. Update your symptoms and we'll refresh your program with a new personalized 30-day schedule.</p>
+            <p style='margin:0 0 22px;'>
+              <a href='https://wavetherapy.ai/reassess' style='background:#2C5E7A;color:#fff;padding:12px 22px;border-radius:30px;text-decoration:none;font-size:13px;font-weight:500;display:inline-block;'>Start re-assessment</a>
+            </p>
+            <div style='margin-top:8px;padding:18px;background:#FDF1E5;border:1px solid #EAE5D9;border-radius:12px;'>
+              <h3 style='font-family:Georgia,serif;color:#7A5A3A;margin:0 0 6px;font-weight:500;font-size:17px;'>Share your Wave Therapy story</h3>
+              <p style='color:#5C6A72;font-size:13px;line-height:1.55;margin:0 0 12px;'>
+                If Wave Therapy has helped you over the last 30 days, we'd love to hear about it. Your testimonial helps others discover what's possible.
+              </p>
+              <a href='{testimonial_url}' style='background:#D27A59;color:#fff;padding:11px 20px;border-radius:30px;text-decoration:none;font-size:13px;font-weight:500;display:inline-block;'>Submit a testimonial</a>
+            </div>
+            <p style='color:#A0AAB0;font-size:11px;margin-top:22px;'>CuraWaves · Wave Therapy · For education &amp; investigative use only.</p>
           </div>
         </div>
         """
